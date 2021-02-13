@@ -21,7 +21,7 @@ public class ResultWriter implements Closeable {
     }
 
     public void writeResult(String path, long hash) throws HandlingFileException {
-        String result = String.format("%08x", hash) + " " + path;
+        String result = String.format("%016x", hash) + " " + path;
         try {
             writer.write(result, 0, result.length());
             writer.newLine();

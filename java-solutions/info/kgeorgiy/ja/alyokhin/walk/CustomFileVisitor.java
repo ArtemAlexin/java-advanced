@@ -17,7 +17,7 @@ public class CustomFileVisitor extends SimpleFileVisitor<Path> {
 
     private long calculateHash(Path path) {
         try(BufferedInputStream input = new BufferedInputStream(Files.newInputStream(path))) {
-            int hash = 0;
+            long hash = 0;
             int readCount;
             byte[] b = new byte[1024];
             while ((readCount = input.read(b, 0, b.length)) >= 0)

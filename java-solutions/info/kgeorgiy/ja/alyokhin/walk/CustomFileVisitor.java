@@ -1,4 +1,4 @@
-package info.kgeorgiy.java.advanced.alyokhin.walk;
+package info.kgeorgiy.ja.alyokhin.walk;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

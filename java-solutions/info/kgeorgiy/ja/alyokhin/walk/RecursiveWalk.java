@@ -1,9 +1,4 @@
-package info.kgeorgiy.java.advanced.alyokhin.walk;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+package info.kgeorgiy.ja.alyokhin.walk;
 
 public class RecursiveWalk extends AbstractWalk {
     public static void main(String[] args) {

@@ -1,8 +1,6 @@
-package info.kgeorgiy.java.advanced.alyokhin.walk;
+package info.kgeorgiy.ja.alyokhin.walk;
 
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class Walk extends AbstractWalk{
     @Override

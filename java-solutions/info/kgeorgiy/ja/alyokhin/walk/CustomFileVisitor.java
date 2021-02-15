@@ -2,6 +2,7 @@ package info.kgeorgiy.ja.alyokhin.walk;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,7 +17,7 @@ public class CustomFileVisitor extends SimpleFileVisitor<Path> {
     }
 
     private long calculateHash(Path path) {
-        try(BufferedInputStream input = new BufferedInputStream(Files.newInputStream(path))) {
+        try(InputStream input = Files.newInputStream(path)) {
             long hash = 0;
             int readCount;
             byte[] b = new byte[1024];

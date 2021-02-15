@@ -3,6 +3,7 @@ package info.kgeorgiy.ja.alyokhin.walk;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.function.Predicate;
 
@@ -44,7 +45,7 @@ public abstract class AbstractWalk {
             } catch (IOException e) {
                 throw new HandlingFileException("Error during walking the tree of file: [" + file + "]");
             }
-        } catch (RuntimeException e) {
+        } catch (InvalidPathException e) {
             resultWriter.writeErrorResult(path);
         }
     }

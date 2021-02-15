@@ -45,7 +45,7 @@ public abstract class AbstractWalk {
             } catch (IOException e) {
                 throw new HandlingFileException("Error during walking the tree of file: [" + file + "]");
             }
-        } catch (InvalidPathException e) {
+        } catch (RuntimeException e) {
             resultWriter.writeErrorResult(path);
         }
     }

@@ -2,8 +2,7 @@ package info.kgeorgiy.ja.alyokhin.walk;
 
 public class RecursiveWalk extends AbstractWalk {
     public static void main(String[] args) {
-        RecursiveWalk solver = new RecursiveWalk();
-        solver.run(args);
+        new RecursiveWalk().run(args);
     }
 
     @Override

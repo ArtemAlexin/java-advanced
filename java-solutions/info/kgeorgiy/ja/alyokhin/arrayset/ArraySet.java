@@ -84,12 +84,8 @@ public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
 
     @Override
     public NavigableSet<T> descendingSet() {
-        return new ArraySet<>(new ListWithOrder<>(arr) {
-            @Override
-            public int getIndex(int index) {
-                return size() - index - 1;
-            }
-        }, Collections.reverseOrder(comparator));
+        return new ArraySet<>(new ListWithOrder<>(arr),
+                Collections.reverseOrder(comparator));
     }
 
     @Override
@@ -99,7 +95,7 @@ public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
 
     private NavigableSet<T> interval(int left, int right) {
         if (right < left) {
-            return new ArraySet<T>(comparator);
+            return new ArraySet<>(comparator);
         }
         return new ArraySet<>(arr.subList(left, right), comparator);
     }

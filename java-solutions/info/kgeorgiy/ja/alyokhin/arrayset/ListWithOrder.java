@@ -7,9 +7,10 @@ import java.util.RandomAccess;
 public class ListWithOrder<T> extends AbstractList<T> implements RandomAccess {
     private final List<T> arr;
     private boolean reversed = false;
+
     public ListWithOrder(List<T> arr) {
-        if(arr instanceof ListWithOrder) {
-            this.arr = ((ListWithOrder<T>) arr).getArr();
+        if (arr instanceof ListWithOrder) {
+            this.arr = ((ListWithOrder<T>) arr).arr;
             this.reversed = !((ListWithOrder<Object>) arr).reversed;
         } else {
             this.arr = arr;
@@ -29,7 +30,7 @@ public class ListWithOrder<T> extends AbstractList<T> implements RandomAccess {
     }
 
     public int getIndex(int index) {
-        if(reversed) {
+        if (reversed) {
             return size() - index - 1;
         } else {
             return index;

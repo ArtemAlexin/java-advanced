@@ -22,7 +22,7 @@ public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
     }
 
     public ArraySet() {
-        this((Comparator<T>) null);
+        this(Collections.emptyList(), null);
     }
 
     public ArraySet(Comparator<? super T> comparator) {

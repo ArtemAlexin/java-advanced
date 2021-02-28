@@ -9,27 +9,33 @@ import java.nio.file.Path;
 import java.util.function.Predicate;
 
 public abstract class AbstractWalk {
-    protected void run(final String[] args) {
+    private final CustomFileVisitor fileVisitor = new CustomFileVisitor(this::calculateHash);
+
+    private Path processFileName(String fileName) throws ProcessingFileException {
         try {
-            if (!validArgs(args)) {
-                printError("Exactly two arguments must be passed to the input");
-                return;
-            }
-            final Path inputFile = Path.of(args[0]);
-            final Path outputFile = Path.of(args[1]);
-            createDirectory(outputFile);
-            processData(inputFile, outputFile);
+            return Path.of(fileName);
         } catch (final InvalidPathException e) {
-            // :NOTE: Системные сообщения?
-            // :NOTE: Какой путь неправильный?
-            printError("Invalid path is passed to the input");
-        } catch (final ProcessingFileException e) {
-            printError(e.getMessage());
+            throw new ProcessingFileException("Invalid path is passed to the input + [" + fileName + "]", e);
         }
     }
 
-    private void printError(final String message) {
-        System.out.println(message);
+    protected void run(final String[] args) {
+        try {
+            if (!validArgs(args)) {
+                System.out.println("Exactly two arguments must be passed to the input");
+                return;
+            }
+            final Path inputFile = processFileName(args[0]);
+            final Path outputFile = processFileName(args[1]);
+            createDirectory(outputFile);
+            processData(inputFile, outputFile);
+        } catch (final ProcessingFileException e) {
+            printError(e);
+        }
+    }
+
+    private void printError(ProcessingFileException e) {
+        e.printStackTrace(System.out);
     }
 
     private boolean validArgs(final String[] args) {
@@ -42,7 +48,7 @@ public abstract class AbstractWalk {
             try {
                 Files.createDirectories(parent);
             } catch (final IOException e) {
-                throw new ProcessingFileException("Can not create file: [" + outputFile + "]");
+                throw new ProcessingFileException("Can not create file: [" + outputFile + "]", e);
             }
         }
     }
@@ -55,10 +61,12 @@ public abstract class AbstractWalk {
                     resultWriter.writeErrorResult(path);
                 } else {
                     // :NOTE: Новый Visitor
-                    Files.walkFileTree(file, new CustomFileVisitor(resultWriter, this::calculateHash));
+                    // Fixed
+                    fileVisitor.setResultWriter(resultWriter);
+                    Files.walkFileTree(file, fileVisitor);
                 }
             } catch (final IOException e) {
-                throw new ProcessingFileException("Error during walking the tree of file: [" + file + "]");
+                throw new ProcessingFileException("Error during walking the tree of file: [" + file + "]", e);
             }
         } catch (final InvalidPathException e) {
             resultWriter.writeErrorResult(path);
@@ -69,20 +77,22 @@ public abstract class AbstractWalk {
 
     private void processData(final Path input, final Path output) throws ProcessingFileException {
         // :NOTE: Переставить
-        try (final ResultWriter resultWriter = new ResultWriter(output)) {
-            try (final BufferedReader reader = Files.newBufferedReader(input)) {
+        // Fixed
+        try (final BufferedReader reader = Files.newBufferedReader(input)) {
+            try (final ResultWriter resultWriter = new ResultWriter(output)) {
                 String readData;
                 while ((readData = reader.readLine()) != null) {
                     walkFile(resultWriter, readData);
                 }
-            } catch (final ProcessingFileException e) {
+            } catch (ProcessingFileException e) {
                 throw e;
             } catch (final IOException e) {
                 // :NOTE: Системные сообщения?
-                throw new ProcessingFileException("Can not process file: [" + input.toString() + "]");
+                // Fixed
+                throw new ProcessingFileException("Can not process file: [" + output.toString() + "]", e);
             }
         } catch (final IOException e) {
-            throw new ProcessingFileException("Can not process file: [" + output.toString() + "]");
+            throw new ProcessingFileException("Can not process file: [" + input.toString() + "]", e);
         }
     }
 

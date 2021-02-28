@@ -8,12 +8,20 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Function;
 
 public class CustomFileVisitor extends SimpleFileVisitor<Path> {
-    private final ResultWriter resultWriter;
+    private ResultWriter resultWriter;
     private final Function<Path, Long> hashFunction;
 
     public CustomFileVisitor(final ResultWriter resultWriter, final Function<Path, Long> hashFunction) {
         this.resultWriter = resultWriter;
         this.hashFunction = hashFunction;
+    }
+
+    public CustomFileVisitor(Function<Path, Long> hashFunction) {
+        this.hashFunction = hashFunction;
+    }
+
+    public void setResultWriter(ResultWriter resultWriter) {
+        this.resultWriter = resultWriter;
     }
 
     @Override

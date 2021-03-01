@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 public abstract class AbstractWalk {
     private final CustomFileVisitor fileVisitor = new CustomFileVisitor(this::calculateHash);
 
-    private Path processFileName(String fileName) throws ProcessingFileException {
+    private Path processFileName(final String fileName) throws ProcessingFileException {
         try {
             return Path.of(fileName);
         } catch (final InvalidPathException e) {
@@ -25,6 +25,7 @@ public abstract class AbstractWalk {
                 System.out.println("Exactly two arguments must be passed to the input");
                 return;
             }
+
             final Path inputFile = processFileName(args[0]);
             final Path outputFile = processFileName(args[1]);
             createDirectory(outputFile);
@@ -32,10 +33,6 @@ public abstract class AbstractWalk {
         } catch (final ProcessingFileException e) {
             System.err.println(e.getMessage());
         }
-    }
-
-    private void printError(ProcessingFileException e) {
-        e.printStackTrace(System.out);
     }
 
     private boolean validArgs(final String[] args) {
@@ -53,42 +50,37 @@ public abstract class AbstractWalk {
         }
     }
 
-    protected void walkFileWithCondition(final ResultWriter resultWriter, final String path, final Predicate<Path> failCondition) throws ProcessingFileException {
+    protected void walkFileWithCondition(final String path, final Predicate<Path> failCondition) throws ProcessingFileException {
         try {
             final Path file = Path.of(path);
             try {
                 if (failCondition.test(file)) {
-                    resultWriter.writeErrorResult(path);
+                    fileVisitor.visitFailed(path);
                 } else {
-                    // :NOTE: Новый Visitor
-                    // Fixed
-                    fileVisitor.setResultWriter(resultWriter);
                     Files.walkFileTree(file, fileVisitor);
                 }
             } catch (final IOException e) {
                 throw new ProcessingFileException("Error during walking the tree of file: [" + file + "]", e);
             }
         } catch (final InvalidPathException e) {
-            resultWriter.writeErrorResult(path);
+            fileVisitor.visitFailed(path);
         }
     }
 
-    protected abstract void walkFile(ResultWriter resultWriter, String path) throws ProcessingFileException;
+    protected abstract void walkFile(String path) throws ProcessingFileException;
 
     private void processData(final Path input, final Path output) throws ProcessingFileException {
-        // :NOTE: Переставить
-        // Fixed
         try (final BufferedReader reader = Files.newBufferedReader(input)) {
             try (final ResultWriter resultWriter = new ResultWriter(output)) {
+                fileVisitor.setResultWriter(resultWriter);
                 String readData;
+                // :NOTE: Сообщение
                 while ((readData = reader.readLine()) != null) {
-                    walkFile(resultWriter, readData);
+                    walkFile(readData);
                 }
-            } catch (ProcessingFileException e) {
+            } catch (final ProcessingFileException e) {
                 throw e;
             } catch (final IOException e) {
-                // :NOTE: Системные сообщения?
-                // Fixed
                 throw new ProcessingFileException("Can not process file: [" + output.toString() + "]", e);
             }
         } catch (final IOException e) {

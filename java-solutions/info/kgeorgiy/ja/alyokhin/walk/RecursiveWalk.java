@@ -6,7 +6,7 @@ public class RecursiveWalk extends AbstractWalk {
     }
 
     @Override
-    protected void walkFile(final ResultWriter resultWriter, final String path) throws ProcessingFileException {
-        walkFileWithCondition(resultWriter, path, x -> false);
+    protected void walkFile(final String path) throws ProcessingFileException {
+        walkFileWithCondition(path, x -> false);
     }
 }

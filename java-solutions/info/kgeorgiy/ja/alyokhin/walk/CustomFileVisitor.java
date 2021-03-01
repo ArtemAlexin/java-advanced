@@ -16,11 +16,11 @@ public class CustomFileVisitor extends SimpleFileVisitor<Path> {
         this.hashFunction = hashFunction;
     }
 
-    public CustomFileVisitor(Function<Path, Long> hashFunction) {
+    public CustomFileVisitor(final Function<Path, Long> hashFunction) {
         this.hashFunction = hashFunction;
     }
 
-    public void setResultWriter(ResultWriter resultWriter) {
+    public void setResultWriter(final ResultWriter resultWriter) {
         this.resultWriter = resultWriter;
     }
 
@@ -32,7 +32,11 @@ public class CustomFileVisitor extends SimpleFileVisitor<Path> {
 
     @Override
     public FileVisitResult visitFileFailed(final Path file, final IOException exc) throws ProcessingFileException {
-        resultWriter.writeErrorResult(file);
+        visitFailed(file.toString());
         return FileVisitResult.CONTINUE;
+    }
+
+    public void visitFailed(final String path) throws ProcessingFileException {
+        resultWriter.writeErrorResult(path);
     }
 }

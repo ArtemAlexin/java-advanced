@@ -30,7 +30,7 @@ public abstract class AbstractWalk {
             createDirectory(outputFile);
             processData(inputFile, outputFile);
         } catch (final ProcessingFileException e) {
-            printError(e);
+            System.err.println(e.getMessage());
         }
     }
 

@@ -20,8 +20,13 @@ public class StudentDB implements AdvancedQuery {
     // :NOTE: constants should be in capital
     private static final Comparator<GroupName> COMPARATOR_GROUP_NAME = Comparator.comparing(Enum::name);
     private static final Comparator<Group> GROUP_COMPARATOR = Comparator.comparing(Group::getName);
-    private static final Comparator<Set<GroupName>> SIZE_SET_COMPARATOR = Comparator.comparingInt(Set::size);
-    private static final Comparator<List<Student>> LIST_SIZE_COMPARATOR = Comparator.comparing(List::size);
+
+    private static <T extends Collection<?>> Comparator<T> getComparator() {
+        return Comparator.comparing(T::size);
+    }
+
+    private static final Comparator<Set<GroupName>> SIZE_SET_COMPARATOR = getComparator();
+    private static final Comparator<List<Student>> LIST_SIZE_COMPARATOR = getComparator();
 
     private <T extends Collection<Student>> Stream<Student> studentsStream(T students) {
         return students.stream();

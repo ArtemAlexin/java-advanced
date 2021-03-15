@@ -18,7 +18,10 @@ public class StudentDB implements AdvancedQuery {
             thenComparing(Comparator.comparing(Student::getFirstName).reversed())
             .thenComparing(Student::getId);
     // :NOTE: constants should be in capital
-    private static final Comparator<GroupName> comparatorGroupName = Comparator.comparing(Enum::name);
+    private static final Comparator<GroupName> COMPARATOR_GROUP_NAME = Comparator.comparing(Enum::name);
+    private static final Comparator<Group> GROUP_COMPARATOR = Comparator.comparing(Group::getName);
+    private static final Comparator<Set<GroupName>> SIZE_SET_COMPARATOR = Comparator.comparingInt(Set::size);
+    private static final Comparator<List<Student>> LIST_SIZE_COMPARATOR = Comparator.comparing(List::size);
 
     private <T extends Collection<Student>> Stream<Student> studentsStream(T students) {
         return students.stream();
@@ -70,7 +73,7 @@ public class StudentDB implements AdvancedQuery {
     private List<Group> toGroupList(Collection<Student> students, Comparator<Student> comparator) {
         return getEntrySetStream(studentsStream(students).sorted(comparator))
                 .map(x -> new Group(x.getKey(), x.getValue()))
-                .sorted(Comparator.comparing(Group::getName))
+                .sorted(GROUP_COMPARATOR)
                 .collect(Collectors.toList());
     }
 
@@ -102,7 +105,7 @@ public class StudentDB implements AdvancedQuery {
                         Collectors.mapping(Student::getGroup, Collectors.toSet())
                 ),
                 Comparator.naturalOrder(),
-                Comparator.comparingInt(Set::size),
+                SIZE_SET_COMPARATOR,
                 "");
     }
 
@@ -139,15 +142,15 @@ public class StudentDB implements AdvancedQuery {
     @Override
     public GroupName getLargestGroup(Collection<Student> students) {
         return this.getLargestObjectByComparator(getEntrySetStream(studentsStream(students)),
-                comparatorGroupName,
-                Comparator.comparing(List::size));
+                COMPARATOR_GROUP_NAME,
+                LIST_SIZE_COMPARATOR);
     }
 
     @Override
     public GroupName getLargestGroupFirstName(Collection<Student> students) {
         return this.getLargestObjectByComparator(getEntrySetStream(studentsStream(students),
                 Collectors.collectingAndThen(Collectors.mapping(Student::getFirstName, Collectors.toSet()), Set::size)),
-                comparatorGroupName.reversed(),
+                COMPARATOR_GROUP_NAME.reversed(),
                 Integer::compareTo);
     }
 

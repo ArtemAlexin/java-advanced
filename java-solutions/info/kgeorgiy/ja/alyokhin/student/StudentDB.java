@@ -1,4 +1,4 @@
-package info.kgeorgiy.java.advanced.alyokhin.student;
+package info.kgeorgiy.ja.alyokhin.student;
 
 import info.kgeorgiy.java.advanced.student.*;
 
@@ -15,6 +15,7 @@ public class StudentDB implements AdvancedQuery {
             comparing((Student::getLastName)).reversed().
             thenComparing(Comparator.comparing(Student::getFirstName).reversed())
             .thenComparing(Student::getId);
+    // :NOTE: constants should be in capital
     private static final Comparator<GroupName> comparatorGroupName = Comparator.comparing(Enum::name);
     private <T extends Collection<Student>> Stream<Student> studentsStream(T students) {
         return students.stream();

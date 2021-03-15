@@ -11,12 +11,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StudentDB implements AdvancedQuery {
+    // :NOTE: extract other common comparators into constants
+
     private static final Comparator<Student> FULL_NAME_COMPARATOR = Comparator.
             comparing((Student::getLastName)).reversed().
             thenComparing(Comparator.comparing(Student::getFirstName).reversed())
             .thenComparing(Student::getId);
     // :NOTE: constants should be in capital
     private static final Comparator<GroupName> comparatorGroupName = Comparator.comparing(Enum::name);
+
     private <T extends Collection<Student>> Stream<Student> studentsStream(T students) {
         return students.stream();
     }
@@ -50,7 +53,9 @@ public class StudentDB implements AdvancedQuery {
         return student -> Objects.equals(function.apply(student), object);
     }
 
-    private <T, R> Stream<Map.Entry<R, T>> getEntrySetStream(Stream<Student> students, Function<Student, R> function, Collector<Student, ?, T> collector) {
+    private <T, R> Stream<Map.Entry<R, T>> getEntrySetStream(Stream<Student> students,
+                                                             Function<Student, R> function,
+                                                             Collector<Student, ?, T> collector) {
         return students.collect(Collectors.groupingBy(function, collector)).entrySet().stream();
     }
 
@@ -90,9 +95,15 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public String getMostPopularName(Collection<Student> students) {
-        return getLargestObjectByComparator(getEntrySetStream(studentsStream(students),
-                Student::getFirstName, Collectors.mapping(Student::getGroup, Collectors.toSet())),
-                Comparator.naturalOrder(), Comparator.comparingInt(Set::size), "");
+        return getLargestObjectByComparator(
+                getEntrySetStream(
+                        studentsStream(students),
+                        Student::getFirstName,
+                        Collectors.mapping(Student::getGroup, Collectors.toSet())
+                ),
+                Comparator.naturalOrder(),
+                Comparator.comparingInt(Set::size),
+                "");
     }
 
     @Override

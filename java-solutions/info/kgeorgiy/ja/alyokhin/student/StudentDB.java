@@ -15,7 +15,7 @@ public class StudentDB implements AdvancedQuery {
             comparing((Student::getLastName)).reversed().
             thenComparing(Comparator.comparing(Student::getFirstName).reversed())
             .thenComparing(Student::getId);
-
+    private static final Comparator<GroupName> comparatorGroupName = Comparator.comparing(Enum::name);
     private <T extends Collection<Student>> Stream<Student> studentsStream(T students) {
         return students.stream();
     }
@@ -127,7 +127,7 @@ public class StudentDB implements AdvancedQuery {
     @Override
     public GroupName getLargestGroup(Collection<Student> students) {
         return this.getLargestObjectByComparator(getEntrySetStream(studentsStream(students)),
-                Comparator.naturalOrder(),
+                comparatorGroupName,
                 Comparator.comparing(List::size));
     }
 
@@ -135,7 +135,7 @@ public class StudentDB implements AdvancedQuery {
     public GroupName getLargestGroupFirstName(Collection<Student> students) {
         return this.getLargestObjectByComparator(getEntrySetStream(studentsStream(students),
                 Collectors.collectingAndThen(Collectors.mapping(Student::getFirstName, Collectors.toSet()), Set::size)),
-                Comparator.reverseOrder(),
+                comparatorGroupName.reversed(),
                 Integer::compareTo);
     }
 

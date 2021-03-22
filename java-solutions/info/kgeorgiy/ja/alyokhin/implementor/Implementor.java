@@ -17,8 +17,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Implementor implements Impler {
-    private static final MethodGenerator methodGenerator = new MethodGenerator();
-    private static final ConstructorGenerator constructorGenerator = new ConstructorGenerator(Implementor::generateClassName);
+    private static final MethodGenerator METHOD_GENERATOR = new MethodGenerator();
+    private static final ConstructorGenerator CONSTRUCTOR_GENERATOR = new ConstructorGenerator(Implementor::generateClassName);
 
     private static String getPackageName(Class<?> token) {
         return Objects.isNull(token) ? "" : token.getPackageName();
@@ -111,7 +111,7 @@ public class Implementor implements Impler {
         methods.removeAll(getAllMethodWithPredicate(token,
                 method -> Modifier.isFinal(method.getModifiers())));
         for (CustomMethod method : methods) {
-            writer.write(methodGenerator.createExecutable(method.getMethod()));
+            writer.write(METHOD_GENERATOR.createExecutable(method.getMethod()));
         }
     }
 
@@ -121,7 +121,7 @@ public class Implementor implements Impler {
             throw new ImplerException("Class has no public constructors");
         }
         for (Constructor<?> constructor : constructors) {
-            writer.write(constructorGenerator.createExecutable(constructor));
+            writer.write(CONSTRUCTOR_GENERATOR.createExecutable(constructor));
         }
     }
 

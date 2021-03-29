@@ -1,4 +1,4 @@
-package info.kgeorgiy.ja.alyokhin.jarimplementor;
+package info.kgeorgiy.ja.alyokhin.implementor;
 
 import java.io.File;
 import java.io.IOException;

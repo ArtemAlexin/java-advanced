@@ -6,10 +6,10 @@ import java.util.function.Function;
 
 
 public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
-    private final List<T> arr;
+    private final ListWithOrder<T> arr;
     private final Comparator<? super T> comparator;
 
-    private ArraySet(List<T> arr, Comparator<? super T> comparator) {
+    private ArraySet(ListWithOrder<T> arr, Comparator<? super T> comparator) {
         this.arr = arr;
         this.comparator = comparator;
     }

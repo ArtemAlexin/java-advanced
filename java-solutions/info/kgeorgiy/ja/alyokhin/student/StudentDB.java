@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 
 public class StudentDB implements AdvancedQuery {
     // :NOTE: extract other common comparators into constants
-
     private static final Comparator<Student> FULL_NAME_COMPARATOR = Comparator.
             comparing((Student::getLastName)).reversed().
             thenComparing(Comparator.comparing(Student::getFirstName).reversed())

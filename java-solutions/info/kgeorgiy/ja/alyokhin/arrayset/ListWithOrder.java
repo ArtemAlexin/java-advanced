@@ -9,12 +9,12 @@ public class ListWithOrder<T> extends AbstractList<T> implements RandomAccess {
     private boolean reversed = false;
 
     public ListWithOrder(List<T> arr) {
-        if (arr instanceof ListWithOrder) {
-            this.arr = ((ListWithOrder<T>) arr).arr;
-            this.reversed = !((ListWithOrder<Object>) arr).reversed;
-        } else {
-            this.arr = arr;
-        }
+        this.arr = arr;
+    }
+
+    public ListWithOrder(ListWithOrder<T> arr) {
+        this.arr = arr.getArr();
+        this.reversed = !arr.reversed;
     }
 
     public boolean isReversed() {

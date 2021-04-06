@@ -1,8 +1,13 @@
 package info.kgeorgiy.ja.alyokhin.implementor;
 
-import java.lang.reflect.Method;
+import info.kgeorgiy.ja.alyokhin.implementor.generic.GenericTypeGeneratorUtils;
+import info.kgeorgiy.java.advanced.implementor.ImplerException;
 
-import static info.kgeorgiy.ja.alyokhin.implementor.Utils.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+
+import static info.kgeorgiy.ja.alyokhin.implementor.Utils.RETURN_STATEMENT;
+import static info.kgeorgiy.ja.alyokhin.implementor.Utils.SPECIAL_PRIMITIVE_RETURN_VALUES;
 
 /**
  * Class which extends {@link AbstractExecutableGenerator}.
@@ -28,14 +33,14 @@ public class MethodGenerator extends AbstractExecutableGenerator<Method> {
 
     /**
      * Returns {@link String} representation the provided <var>method</var> return type name.
-     * Invokes {@link Class#getCanonicalName()}.
+     * Invokes {@link Method#getGenericReturnType()} and {@link GenericTypeGeneratorUtils#getClassName}.
      *
      * @param method {@link Method} return value of which must be generated.
      * @return type representation.
      */
     @Override
     protected String generateReturn(Method method) {
-        return method.getReturnType().getCanonicalName();
+        return GenericTypeGeneratorUtils.getClassName(method.getGenericReturnType());
     }
 
     /**

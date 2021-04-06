@@ -1,5 +1,8 @@
 package info.kgeorgiy.ja.alyokhin.implementor;
 
+import info.kgeorgiy.ja.alyokhin.implementor.generic.GenericTypeGeneratorUtils;
+import info.kgeorgiy.java.advanced.implementor.ImplerException;
+
 import java.lang.reflect.Executable;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -8,7 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static info.kgeorgiy.ja.alyokhin.implementor.Utils.THROWS_STATEMENT;
-
 /**
  * This class provides a skeletal implementation of generating {@link String} representation
  * of {@link Executable} object.
@@ -20,13 +22,16 @@ import static info.kgeorgiy.ja.alyokhin.implementor.Utils.THROWS_STATEMENT;
 public abstract class AbstractExecutableGenerator<T extends Executable> {
     /**
      * Returns string representing the <var>parameter</var>(type and name).
+     * Uses {@link GenericTypeGeneratorUtils#generateType}.
      *
      * @param parameter {@link Parameter} of the executable.
      * @return string representation.
      */
     private String generateParameterWithType(Parameter parameter) {
-        return new Formatter().setWord(parameter.getType()
-                .getCanonicalName()).setTextPart(parameter.getName()).getFormattedText();
+        return new Formatter()
+                .setWord(GenericTypeGeneratorUtils.generateType(parameter))
+                .setTextPart(parameter.getName())
+                .getFormattedText();
     }
 
     /**
@@ -40,7 +45,7 @@ public abstract class AbstractExecutableGenerator<T extends Executable> {
 
     /**
      * Method to be implemented.
-     * Generates name of the <var></var>executable</var>.
+     * Generates name of the <var>executable</var>.
      *
      * @param executable parameter name of which should be generated.
      * @return {@link String} representation of <var>executable</var> name.
@@ -91,6 +96,7 @@ public abstract class AbstractExecutableGenerator<T extends Executable> {
      * Return {@link String} representation of <var>executable</var>.
      * Uses {@link #generateMain}, {@link #generateName}, {@link #generateReturn}, {@link #generateException},
      * {@link #generateParameters}, {@link #generateParameterWithType} to create representation.
+     * Also invokes {@link GenericTypeGeneratorUtils#generateExecutableTypeParameters}
      *
      * @param executable object implementation of which should be generated.
      * @return representaion of <var>executable</var>
@@ -99,6 +105,7 @@ public abstract class AbstractExecutableGenerator<T extends Executable> {
         int mod = executable.getModifiers() & ~Modifier.ABSTRACT & ~Modifier.NATIVE & ~Modifier.TRANSIENT;
         return new Formatter().setTabulation()
                 .setWordIfPresent(Modifier.toString(mod))
+                .setWord(GenericTypeGeneratorUtils.generateExecutableTypeParameters(executable))
                 .setWordIfPresent(generateReturn(executable))
                 .setTextPart(generateName(executable))
                 .setWord(generateParameters(executable, this::generateParameterWithType))

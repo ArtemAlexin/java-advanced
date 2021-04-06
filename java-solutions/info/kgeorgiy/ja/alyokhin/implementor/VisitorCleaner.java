@@ -1,6 +1,5 @@
 package info.kgeorgiy.ja.alyokhin.implementor;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;

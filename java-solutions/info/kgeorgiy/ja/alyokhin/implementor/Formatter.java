@@ -53,6 +53,7 @@ public class Formatter {
      * Appends <var>number</var> spaces to the text.
      * Invokes {@link #doAction}.
      *
+     * @param number number of spaces
      * @return reference to this.
      */
     public Formatter setSpace(int number) {
@@ -73,6 +74,7 @@ public class Formatter {
      * Appends <var>number</var> tabulations to the text.
      * Invokes {@link #doAction}.
      *
+     * @param number number of tabulations.
      * @return reference to this.
      */
     public Formatter setTabulation(int number) {
@@ -83,6 +85,7 @@ public class Formatter {
      * Appends <var>text</var> to the text.
      * Invokes {@link #doAction}.
      *
+     * @param text text to append.
      * @return reference to this.
      */
     public Formatter setTextPart(String text) {
@@ -93,6 +96,7 @@ public class Formatter {
      * Appends one <var>word</var> to the text with {@link Utils#SPACE}.
      * Invokes {@link #doAction}.
      *
+     * @param word word to append.
      * @return reference to this.
      */
     public Formatter setWord(String word) {
@@ -104,6 +108,7 @@ public class Formatter {
      * {@code EOl} is {@link Utils#EOL}.
      * Invokes {@link #doAction}.
      *
+     * @param paragraph paragraph to append.
      * @return reference to this.
      */
     public Formatter setParagraph(String paragraph) {
@@ -121,6 +126,7 @@ public class Formatter {
      * Appends <var>statement</var> to the text {@link Utils#SEMICOLON} and {@link Utils#EOL}.
      * Invokes {@link #doAction}.
      *
+     * @param statement statement to append.
      * @return reference to this.
      */
     public Formatter setStatement(String statement) {
@@ -131,6 +137,7 @@ public class Formatter {
      * Appends <var>word</var> to the text with {@link Utils#SPACE} if word is not empty.
      * Invokes {@link #setWord}, {@link #doActionIfPresent}.
      *
+     * @param word word to append.
      * @return reference to this.
      */
     public Formatter setWordIfPresent(String word) {
@@ -151,6 +158,7 @@ public class Formatter {
      * Appends <var>block</var> to the text {@link Utils#SPACE}, {@link Utils#LBRACKET} and {@link Utils#EOL}.
      * Invokes {@link #doAction}.
      *
+     * @param block block to append.
      * @return reference to this.
      */
     public Formatter setBlockBeginning(String block) {
@@ -162,6 +170,7 @@ public class Formatter {
      * {@link Utils#EOL}, {@link Utils#TAB}, {@link Utils#RBRACKET} and {@link Utils#EOL}.
      * Invokes {@link #doAction}
      *
+     * @param lastStatement statement to append.
      * @return reference to this.
      */
     public Formatter setBlockEnding(String lastStatement) {

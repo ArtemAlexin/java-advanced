@@ -1,5 +1,6 @@
 package info.kgeorgiy.ja.alyokhin.implementor;
 
+import info.kgeorgiy.ja.alyokhin.implementor.generic.GenericTypeGeneratorUtils;
 import info.kgeorgiy.java.advanced.implementor.ImplerException;
 import info.kgeorgiy.java.advanced.implementor.JarImpler;
 
@@ -13,7 +14,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.*;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -75,6 +79,8 @@ public class Implementor implements JarImpler {
     /**
      * Is equivalent of {@code generateClassWithName(token, "Impl.java")}.
      *
+     * @param token type according to which name must be generated.
+     * @return name with extension "Impl.java.
      * @see #generateClassWithName
      */
     private static String getClassNameImpl(Class<?> token) {
@@ -84,6 +90,8 @@ public class Implementor implements JarImpler {
     /**
      * Is equivalent of {@code generateClassWithName(token, "Impl.class")}.
      *
+     * @param token type according to which name must be generated.
+     * @return name with extension "Impl.class".
      * @see #generateClassWithName
      */
     private static String getCompiledClassName(Class<?> token) {
@@ -93,6 +101,8 @@ public class Implementor implements JarImpler {
     /**
      * Is equivalent of {@code generateClassWithName(token, "Impl")}.
      *
+     * @param token type according to which name must be generated.
+     * @return name with extension "Impl".
      * @see #generateClassWithName
      */
     private static String generateClassName(Class<?> token) {
@@ -106,7 +116,7 @@ public class Implementor implements JarImpler {
      * @param path     {@link Path} against which resulting path will be resolved.
      * @param token    type token representing class.
      * @param function {@link Function} to be applied to the given type token.
-     * @return {@code Path} object representing.
+     * @return {@code Path} object representing described path.
      * @throws NullPointerException if <var>path</var> is null.
      */
     private static Path getPath(Path path, Class<?> token, Function<Class<?>, String> function) {
@@ -116,8 +126,12 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Is equivalent of {@code getPath(path, token, JarImplementor::getClassNameImpl)}.
+     * Is equivalent of {@code getPath(path, token, Implementor::getClassNameImpl)}.
      *
+     * @param path  Path againts which result must be resolved.
+     * @param token type token representing class.
+     * @return {@code Path} object representing described path
+     * and resolved against result of applying {@link Implementor#getClassNameImpl}
      * @see #getPath
      */
     private static Path getPath(Path path, Class<?> token) {
@@ -127,6 +141,10 @@ public class Implementor implements JarImpler {
     /**
      * Is equivalent of {@code getPath(Path.of(""), token, classNameGenerator)}.
      *
+     * @param token              type token representing class.
+     * @param classNameGenerator {@link Function} to generate name by type token.
+     * @return {@link String} representing relative path to the
+     * <var>token</var> with applied <var>classNameGenerator</var>.
      * @see #getPath
      */
     static String getFilePath(Class<?> token, Function<Class<?>, String> classNameGenerator) {
@@ -267,7 +285,7 @@ public class Implementor implements JarImpler {
      * @param writer {@code BufferedWriter} where.
      * @throws IOException if {@link BufferedWriter#write(String)} throws an {@code IOException}.
      */
-    private static void writeAbstractMethods(Class<?> token, BufferedWriter writer) throws IOException {
+    private static void writeAbstractMethods(Class<?> token, UnicodeBufferedWriter writer) throws IOException {
         Set<CustomMethod> methods = getAllMethodWithPredicate(token,
                 method -> Modifier.isAbstract(method.getModifiers()));
         methods.removeAll(getAllMethodWithPredicate(token,
@@ -278,15 +296,16 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Writes {@link String} implementation of all constructors which must be implemented to the given {@link BufferedWriter}.
+     * Writes {@link String} implementation of all constructors which must be implemented to the given {@link UnicodeBufferedWriter}.
      * Invokes {@link AbstractExecutableGenerator#createExecutable} to create {@code String representation} of method.
      * Uses {@link Implementor#CONSTRUCTOR_GENERATOR} to create constructor implementation.
      *
      * @param token  type token which represents class or interface that must be implemented.
-     * @param writer {@code BufferedWriter} where.
-     * @throws IOException if {@link BufferedWriter#write(String)} throws an {@code IOException}.
+     * @param writer {@code UnicodeBufferedWriter} where.
+     * @throws IOException     if {@link UnicodeBufferedWriter#write} throws an {@code IOException}.
+     * @throws ImplerException if <var>token</var> has no public constructors.
      */
-    private static void writeConstructors(Class<?> token, BufferedWriter writer) throws IOException, ImplerException {
+    private static void writeConstructors(Class<?> token, UnicodeBufferedWriter writer) throws IOException, ImplerException {
         Constructor<?>[] constructors = getConstructors(token);
         if (constructors.length == 0) {
             throw new ImplerException("Class has no public constructors");
@@ -297,7 +316,7 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Write class header {@link String} representation  of the class which must be implemented to the given {@link BufferedWriter}.
+     * Write class header {@link String} representation  of the class which must be implemented to the given {@link UnicodeBufferedWriter}.
      * {@code token} can be both interface or class.
      * Class header is everything till the first left bracket.
      * Example
@@ -305,31 +324,36 @@ public class Implementor implements JarImpler {
      * package ru.example.domain
      * public class Example extends AbstractExample implements ExampleInterface {
      * </code>
+     * Uses {@link GenericTypeGeneratorUtils#generateExecutableTypeParameters},
+     * {@link GenericTypeGeneratorUtils#generateClassExtensionParameters}.
      *
      * @param token  type token which represents class or interface that must be implemented.
-     * @param writer {@code BufferedWriter} where generated {@code String} should be written.
-     * @throws IOException if {@link BufferedWriter#write(String)} throws an {@code IOException}.
+     * @param writer {@code UnicodeBufferedWriter} where generated {@code String} should be written.
+     * @throws IOException if {@link UnicodeBufferedWriter#write} throws an {@code IOException}.
      */
-    private static void writeClassHeader(Class<?> token, BufferedWriter writer) throws IOException {
+    private static void writeClassHeader(Class<?> token, UnicodeBufferedWriter writer) throws IOException {
         writer.write(
                 new Formatter()
                         .setTextPart(generatePackage(token))
                         .setWord(PUBLIC_NAME)
                         .setWord(generateClassName(token))
+                        .setWord(GenericTypeGeneratorUtils.generateClassTypeParameters(token))
                         .setWord(generateExtension(token))
-                        .setBlockBeginning(token.getCanonicalName())
+                        .setWord(token.getCanonicalName())
+                        .setBlockBeginning(GenericTypeGeneratorUtils.generateClassExtensionParameters(token))
                         .getFormattedText()
         );
     }
 
     /**
-     * Write class footer {@link String} representation of the class which must be implemented to the given {@link BufferedWriter}.
+     * Write class footer {@link String} representation of the class which must be implemented to the given {@link UnicodeBufferedWriter}.
      * {@code token} can be both interface or class.
      * Class footer is {@code "}"} and {@code EOL}.
      *
-     * @throws IOException if {@link BufferedWriter#write(String)} throws an {@code IOException}.
+     * @param bufferedWriter {@link UnicodeBufferedWriter} where implementation must be written.
+     * @throws IOException if {@link UnicodeBufferedWriter#write} throws an {@code IOException}.
      */
-    private static void writeClassFooter(BufferedWriter bufferedWriter) throws IOException {
+    private static void writeClassFooter(UnicodeBufferedWriter bufferedWriter) throws IOException {
         bufferedWriter.write(new Formatter().setBlockEnding().getFormattedText());
     }
 
@@ -350,7 +374,7 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Write {@link String} representation of the class which must be implemented to the given {@link BufferedWriter}.
+     * Write {@link String} representation of the class which must be implemented to the given {@link UnicodeBufferedWriter}.
      * {@code token} can be both interface or class.
      * Class representation consists of
      * <ul>
@@ -361,10 +385,12 @@ public class Implementor implements JarImpler {
      * </ul>
      *
      * @param token  type token which represents class or interface that must be implemented.
-     * @param writer {@code BufferedWriter} where generated {@code String} should be written.
-     * @throws IOException if {@link BufferedWriter#write(String)} throws an {@code IOException}.
+     * @param writer {@code UnicodeBufferedWriter} where generated {@code String} should be written.
+     * @throws IOException     if {@link UnicodeBufferedWriter#write} throws an {@code IOException}.
+     * @throws ImplerException if any of {@link #writeClassHeader}, {@link #writeConstructors},
+     *                         {@link #writeAbstractMethods}, {@link #writeClassFooter} throws {@link ImplerException}.
      */
-    private static void writeClass(Class<?> token, BufferedWriter writer) throws ImplerException, IOException {
+    private static void writeClass(Class<?> token, UnicodeBufferedWriter writer) throws ImplerException, IOException {
         writeClassHeader(token, writer);
         if (!token.isInterface()) {
             writeConstructors(token, writer);
@@ -374,7 +400,6 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * /**
      * Produces code implementing class or interface specified by provided <var>token</var>.
      * <p>
      * Generated class classes name should be same as classes name of the type token with <var>Impl</var> suffix
@@ -395,10 +420,11 @@ public class Implementor implements JarImpler {
      */
     @Override
     public void implement(Class<?> token, Path root) throws ImplerException {
+        validateInput(token, root);
         root = getPath(root, token);
         createParent(root);
         try (BufferedWriter writer = Files.newBufferedWriter(root)) {
-            writeClass(token, writer);
+            writeClass(token, new UnicodeBufferedWriter(writer));
         } catch (IOException e) {
             throw new ImplerException("Can't write to java file", e);
         }
@@ -423,14 +449,14 @@ public class Implementor implements JarImpler {
     public void implementJar(Class<?> token, Path jarFile) throws ImplerException {
         validateInput(token, jarFile);
         createParent(jarFile);
-        Path parentDirectory = jarFile.getParent();
+        Path parentDirectory = jarFile.getParent() == null ? Path.of("") : jarFile.getParent();
         Path tmpDirectory = parentDirectory.resolve(FOLDER_TO_COMPILE).resolve(TMP_FOLDER);
         try {
             implement(token, tmpDirectory);
             compile(token, tmpDirectory);
             build(token, tmpDirectory, jarFile);
         } finally {
-            deleteTmpDirectory(tmpDirectory);
+            deleteTmpDirectory(tmpDirectory.getParent());
         }
     }
 
@@ -493,15 +519,23 @@ public class Implementor implements JarImpler {
         JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
         validateCompiler(javaCompiler);
         URI classpath;
+        String[] args;
         try {
-            classpath = token.getProtectionDomain().getCodeSource().getLocation().toURI();
-        } catch (URISyntaxException e) {
+            var source = token.getProtectionDomain().getCodeSource();
+            var path = tmpDirectory.resolve(getFilePath(token, Implementor::getClassNameImpl)).toString();
+            if (Objects.isNull(source)) {
+                args = new String[]{path};
+            } else {
+                classpath = source.getLocation().toURI();
+                args = new String[]{
+                        "-cp",
+                        Path.of(classpath).toString(),
+                        tmpDirectory.resolve(getFilePath(token, Implementor::getClassNameImpl)).toString()};
+            }
+        } catch (
+                URISyntaxException e) {
             throw new ImplerException("Failed to compile class, can not convert URL to URI");
         }
-        String[] args = {
-                "-cp",
-                Path.of(classpath).toString(),
-                tmpDirectory.resolve(getFilePath(token, Implementor::getClassNameImpl)).toString()};
         if (javaCompiler.run(null, null, null, args) != 0) {
             throw new ImplerException("Error during compiling class");
         }
@@ -579,6 +613,7 @@ public class Implementor implements JarImpler {
             return Objects.hash(Arrays.hashCode(method.getParameterTypes()),
                     method.getName());
         }
+
     }
 
     /**

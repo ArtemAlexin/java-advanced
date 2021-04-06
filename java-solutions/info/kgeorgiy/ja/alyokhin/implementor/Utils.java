@@ -3,7 +3,7 @@ package info.kgeorgiy.ja.alyokhin.implementor;
 import java.util.Map;
 
 /**
- * Class with usedful constants
+ * Class with useful constants
  */
 public class Utils {
     /**

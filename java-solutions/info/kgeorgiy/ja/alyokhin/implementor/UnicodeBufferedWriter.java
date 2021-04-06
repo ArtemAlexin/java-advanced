@@ -48,7 +48,7 @@ public class UnicodeBufferedWriter implements Closeable {
      * @throws IOException if {@link BufferedWriter#write(String)} throws any error.
      */
     public void write(String str) throws IOException {
-        bufferedWriter.write(str);
+        bufferedWriter.write(toUnicode(str));
     }
 
     /**

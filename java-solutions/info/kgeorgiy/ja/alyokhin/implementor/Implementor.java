@@ -59,7 +59,7 @@ public class Implementor implements JarImpler {
      * @return if token is null, then empty string is returned, package name of package otherwise.
      */
     private static String getPackageName(Class<?> token) {
-        return Objects.isNull(token) ? "" : token.getPackageName();
+        return Objects.isNull(token) || token.getPackageName().startsWith("java.") ? "" : token.getPackageName();
     }
 
     /**
@@ -489,6 +489,7 @@ public class Implementor implements JarImpler {
         try (JarOutputStream outputStream = new JarOutputStream(Files.newOutputStream(jarFile), manifest)) {
             outputStream.putNextEntry(new ZipEntry(
                     getNameForJar(token)));
+            System.err.println(getPath(tmpDirectory, token, Implementor::getCompiledClassName));
             Files.copy(getPath(tmpDirectory, token, Implementor::getCompiledClassName), outputStream);
         } catch (IOException e) {
             throw new ImplerException("Unable to write to Jar file");
@@ -503,7 +504,7 @@ public class Implementor implements JarImpler {
      * @return relative path to the class.
      */
     private static String getNameForJar(Class<?> token) {
-        return String.join(JarFileSeparator, token.getPackageName().split("\\.")) +
+        return String.join(JarFileSeparator, getPackageName(token).split("\\.")) +
                 JarFileSeparator + getCompiledClassName(token);
     }
 

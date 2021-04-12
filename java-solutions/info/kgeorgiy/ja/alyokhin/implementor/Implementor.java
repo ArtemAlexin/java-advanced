@@ -33,7 +33,7 @@ import java.util.zip.ZipEntry;
 import static info.kgeorgiy.ja.alyokhin.implementor.Utils.*;
 
 /**
- * Implementation of {@link info.kgeorgiy.java.advanced.implementor.JarImpler} interface
+ * Implementation of {@link JarImpler} interface
  */
 public class Implementor implements JarImpler {
     /**
@@ -68,7 +68,7 @@ public class Implementor implements JarImpler {
      * Example {@code generateClassWithName(String.class, "Impl.java")} will return {@code StringImpl.java}.
      *
      * @param token     type token for class.
-     * @param extension {@link String} representing the extension..
+     * @param extension {@code String} representing the extension..
      * @return name with extension.
      * @throws NullPointerException if <code>token</code> is null.
      */
@@ -80,7 +80,7 @@ public class Implementor implements JarImpler {
      * Is equivalent of {@code generateClassWithName(token, "Impl.java")}.
      *
      * @param token type according to which name must be generated.
-     * @return name with extension "Impl.java.
+     * @return name with extension {@code "Impl.java}.
      * @see #generateClassWithName
      */
     private static String getClassNameImpl(Class<?> token) {
@@ -91,7 +91,7 @@ public class Implementor implements JarImpler {
      * Is equivalent of {@code generateClassWithName(token, "Impl.class")}.
      *
      * @param token type according to which name must be generated.
-     * @return name with extension "Impl.class".
+     * @return name with extension {@code "Impl.class"}.
      * @see #generateClassWithName
      */
     private static String getCompiledClassName(Class<?> token) {
@@ -102,7 +102,7 @@ public class Implementor implements JarImpler {
      * Is equivalent of {@code generateClassWithName(token, "Impl")}.
      *
      * @param token type according to which name must be generated.
-     * @return name with extension "Impl".
+     * @return name with extension {@code "Impl"}.
      * @see #generateClassWithName
      */
     private static String generateClassName(Class<?> token) {
@@ -113,9 +113,9 @@ public class Implementor implements JarImpler {
      * Returns result of applying <var>function</var> to given <var>token</var>, resolved against given <var>path</var>.
      * Invokes {@link Path#resolve}.
      *
-     * @param path     {@link Path} against which resulting path will be resolved.
+     * @param path     {@code Path} against which resulting path will be resolved.
      * @param token    type token representing class.
-     * @param function {@link Function} to be applied to the given type token.
+     * @param function {@code Function} to be applied to the given type token.
      * @return {@code Path} object representing described path.
      * @throws NullPointerException if <var>path</var> is null.
      */
@@ -142,8 +142,8 @@ public class Implementor implements JarImpler {
      * Is equivalent of {@code getPath(Path.of(""), token, classNameGenerator)}.
      *
      * @param token              type token representing class.
-     * @param classNameGenerator {@link Function} to generate name by type token.
-     * @return {@link String} representing relative path to the
+     * @param classNameGenerator {@code Function} to generate name by type token.
+     * @return {@code String} representing relative path to the
      * <var>token</var> with applied <var>classNameGenerator</var>.
      * @see #getPath
      */
@@ -152,7 +152,7 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Returns {@link String} representing package of given {@code token}.
+     * Returns {@code String} representing package of given {@code token}.
      * Example {@code generatePackage(String.class)} return {@code "package java.lang"}.
      *
      * @param token type token to get package for.
@@ -167,7 +167,7 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Return {@link String} representing extension to inherit or implement this class or interface.
+     * Return {@code String} representing extension to inherit or implement this class or interface.
      *
      * @param token type token of the class.
      * @return {@code "implements"} if token is interface, {@code "extends"} otherwise.
@@ -191,7 +191,8 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Checks that it is possible to inherit from class(or implement interface) representing given {@code token}.
+     * Checks that it is possible to inherit from class(or implement interface)
+     * representing given {@code token}.
      *
      * @param token type token of the class.
      * @throws ImplerException      if it is not possible to inherit(implement) because of:
@@ -235,8 +236,8 @@ public class Implementor implements JarImpler {
      * Methods which are marked as bridge will not be added to <var>set</var>.
      *
      * @param methods   array of methods to be added to <var>set</var>
-     * @param set       resulting {@link Set}, where all <var>methods</var> will be added.
-     * @param predicate {@link Predicate} which will be used to filter methods.
+     * @param set       resulting {@code Set}, where all <var>methods</var> will be added.
+     * @param predicate {@code Predicate} which will be used to filter methods.
      */
     private static void addMethods(Method[] methods, Set<CustomMethod> set, Predicate<Method> predicate) {
         Arrays.stream(methods).
@@ -246,12 +247,12 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Returns {@link Set} of all not public methods of given {@code Class} and all it's superclasses filtering with predicate.
+     * Returns {@code Set} of all not public methods of given {@code Class} and all it's superclasses filtering with predicate.
      * All methods are mapped to {@link CustomMethod} using {@link CustomMethod#CustomMethod}.
      * Invokes {@link Class#getDeclaredMethods()}, {@link Class#getSuperclass()} and {@link #addMethods}.
      *
      * @param token     type token representing class.
-     * @param predicate {@link Predicate} to filter methods.
+     * @param predicate {@code Predicate} to filter methods.
      * @return {@code Set} of methods.
      */
     private static Set<CustomMethod> getAllMethodWithPredicate(Class<?> token, Predicate<Method> predicate) {
@@ -324,8 +325,6 @@ public class Implementor implements JarImpler {
      * package ru.example.domain
      * public class Example extends AbstractExample implements ExampleInterface {
      * </code>
-     * Uses {@link GenericTypeGeneratorUtils#generateExecutableTypeParameters},
-     * {@link GenericTypeGeneratorUtils#generateClassExtensionParameters}.
      *
      * @param token  type token which represents class or interface that must be implemented.
      * @param writer {@code UnicodeBufferedWriter} where generated {@code String} should be written.
@@ -337,10 +336,8 @@ public class Implementor implements JarImpler {
                         .setTextPart(generatePackage(token))
                         .setWord(PUBLIC_NAME)
                         .setWord(generateClassName(token))
-                        .setWord(GenericTypeGeneratorUtils.generateClassTypeParameters(token))
                         .setWord(generateExtension(token))
-                        .setWord(token.getCanonicalName())
-                        .setBlockBeginning(GenericTypeGeneratorUtils.generateClassExtensionParameters(token))
+                        .setBlockBeginning(token.getCanonicalName())
                         .getFormattedText()
         );
     }
@@ -364,7 +361,7 @@ public class Implementor implements JarImpler {
      * {@code token} can not be implented if {@link #checkTokenForInheritance} throes an {@code ImplerException}.
      *
      * @param token type token to be checked.
-     * @param root  {@link Path} to be checked.
+     * @param root  {@code Path} to be checked.
      * @throws ImplerException if ar least one of parameters is invalid.
      */
     private static void validateInput(Class<?> token, Path root) throws ImplerException {
@@ -464,7 +461,7 @@ public class Implementor implements JarImpler {
      * Recursively delete all directories and files in path represented by <var>tmpDirectory</var>}.
      * Uses {@link Implementor#FILE_VISITOR} and invokes {@link Files#walkFileTree} to clean file tree.
      *
-     * @param tmpDirectory {@link Path} to the root of file tree to be deleted.
+     * @param tmpDirectory {@code Path} to the root of file tree to be deleted.
      * @throws ImplerException if {@link Files#walkFileTree} throws {@link IOException}.
      */
     private void deleteTmpDirectory(Path tmpDirectory) throws ImplerException {
@@ -497,7 +494,7 @@ public class Implementor implements JarImpler {
     }
 
     /**
-     * Returns {@link String} representation of relative path to the class provided by <var>token</var>.
+     * Returns {@code String} representation of relative path to the class provided by <var>token</var>.
      * {@link Utils#JarFileSeparator} is used as a delimiter.
      *
      * @param token type token representing class.

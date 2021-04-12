@@ -21,7 +21,7 @@ public class GenericTypeGeneratorUtils {
     }
 
     /**
-     * Instance of {@link Collector} used for joining {@link java.util.stream.Stream} of strings.
+     * Instance of {@link Collector} used for joining {@link Stream} of strings.
      * Delimiter is {@code ", "}. Prefix is {@code "<"}. Suffix is {@code ">"}.
      * If no strings is necessary to collect collector returns empty string.
      */
@@ -152,5 +152,15 @@ public class GenericTypeGeneratorUtils {
      */
     public static String generateType(Parameter parameter) {
         return getClassName(parameter.getParameterizedType());
+    }
+
+    /**
+     * Returns String representing raw type of <var>parameter</var>.
+     *
+     * @param parameter {@link Parameter} which type representation must be returned.
+     * @return {@link String} representation of <var>parameter</var>
+     */
+    public static String generateRawType(Parameter parameter) {
+        return parameter.getType().getCanonicalName();
     }
 }

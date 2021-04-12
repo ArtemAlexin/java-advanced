@@ -20,16 +20,16 @@ public class ConstructorGenerator extends AbstractExecutableGenerator<Constructo
     /**
      * Constructor which initialize <code>classNameGenerator</code>.
      *
-     * @param classNameGenerator {@link Function} that creates name of constructor by type token.
+     * @param classNameGenerator {@code Function} that creates name of constructor by type token.
      */
     public ConstructorGenerator(Function<Class<?>, String> classNameGenerator) {
         this.classNameGenerator = classNameGenerator;
     }
 
     /**
-     * Returns {@link String} representation of <var>parameter</var> without type.
+     * Returns {@code String} representation of <var>parameter</var> without type.
      *
-     * @param parameter {@link Parameter} to be represented.
+     * @param parameter {@code Parameter} to be represented.
      * @return parameter representation.
      */
     private String generateParameterWithoutType(Parameter parameter) {
@@ -37,9 +37,9 @@ public class ConstructorGenerator extends AbstractExecutableGenerator<Constructo
     }
 
     /**
-     * Returns empty {@link String}, because constructor do not return any value.
+     * Returns empty {@code String}, because constructor do not return any value.
      *
-     * @param constructor {@link Constructor} return value of which must be generated.
+     * @param constructor {@code Constructor} return value of which must be generated.
      * @return empty return value.
      */
     @Override
@@ -48,10 +48,10 @@ public class ConstructorGenerator extends AbstractExecutableGenerator<Constructo
     }
 
     /**
-     * Returns {@link String} name of <var>constructor</var> using <code>generator</code>
+     * Returns {@code String} name of <var>constructor</var> using <code>generator</code>
      * which wha passed to this object during initialisation.
      *
-     * @param constructor {@link Constructor} name of which must be generated.
+     * @param constructor {@code Constructor} name of which must be generated.
      * @return name of constructor.
      */
     @Override
@@ -60,9 +60,9 @@ public class ConstructorGenerator extends AbstractExecutableGenerator<Constructo
     }
 
     /**
-     * Returns {@link String} representation of <var>constructor</var> main part(between brackets).
+     * Returns {@code String} representation of <var>constructor</var> main part(between brackets).
      *
-     * @param constructor {@link Constructor} main part of which must be generated.
+     * @param constructor {@code Constructor} main part of which must be generated.
      * @return constructor representation.
      */
     @Override

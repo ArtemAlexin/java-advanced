@@ -22,14 +22,14 @@ import static info.kgeorgiy.ja.alyokhin.implementor.Utils.THROWS_STATEMENT;
 public abstract class AbstractExecutableGenerator<T extends Executable> {
     /**
      * Returns string representing the <var>parameter</var>(type and name).
-     * Uses {@link GenericTypeGeneratorUtils#generateType}.
+     * Uses {@link GenericTypeGeneratorUtils#generateRawType}.
      *
-     * @param parameter {@link Parameter} of the executable.
+     * @param parameter {@code Parameter} of the executable.
      * @return string representation.
      */
     private String generateParameterWithType(Parameter parameter) {
         return new Formatter()
-                .setWord(GenericTypeGeneratorUtils.generateType(parameter))
+                .setWord(GenericTypeGeneratorUtils.generateRawType(parameter))
                 .setTextPart(parameter.getName())
                 .getFormattedText();
     }
@@ -48,7 +48,7 @@ public abstract class AbstractExecutableGenerator<T extends Executable> {
      * Generates name of the <var>executable</var>.
      *
      * @param executable parameter name of which should be generated.
-     * @return {@link String} representation of <var>executable</var> name.
+     * @return {@code String} representation of <var>executable</var> name.
      */
     protected abstract String generateName(T executable);
 
@@ -57,14 +57,14 @@ public abstract class AbstractExecutableGenerator<T extends Executable> {
      * Generates main part of the <var>executable</var>(part inside brackets).
      *
      * @param executable parameter main part of which should be generated.
-     * @return {@link String} representation of the.
+     * @return {@code String} representation of the.
      */
     protected abstract String generateMain(T executable);
 
     /**
-     * Returns {@link String} representation of <var>executable</var> parameters mapped by <var>genFunction</var>.
+     * Returns {@code String} representation of <var>executable</var> parameters mapped by <var>genFunction</var>.
      *
-     * @param executable  object {@link Parameter} of which should be generated.
+     * @param executable  object {@code Parameter} of which should be generated.
      * @param genFunction function mapping {@code Parameter} to {@code String}.
      * @return parameters representation.
      */
@@ -75,7 +75,7 @@ public abstract class AbstractExecutableGenerator<T extends Executable> {
     }
 
     /**
-     * Returns {@link String} representation of exceptions which <var>executable</var> throws.
+     * Returns {@code String} representation of exceptions which <var>executable</var> throws.
      * Example <code>throws IOException</code>.
      *
      * @param executable object exceptions of which should be generated.
@@ -93,19 +93,17 @@ public abstract class AbstractExecutableGenerator<T extends Executable> {
     }
 
     /**
-     * Return {@link String} representation of <var>executable</var>.
+     * Return {@code String} representation of <var>executable</var>.
      * Uses {@link #generateMain}, {@link #generateName}, {@link #generateReturn}, {@link #generateException},
      * {@link #generateParameters}, {@link #generateParameterWithType} to create representation.
-     * Also invokes {@link GenericTypeGeneratorUtils#generateExecutableTypeParameters}
      *
      * @param executable object implementation of which should be generated.
-     * @return representaion of <var>executable</var>
+     * @return representation of <var>executable</var>
      */
     public String createExecutable(T executable) {
         int mod = executable.getModifiers() & ~Modifier.ABSTRACT & ~Modifier.NATIVE & ~Modifier.TRANSIENT;
         return new Formatter().setTabulation()
                 .setWordIfPresent(Modifier.toString(mod))
-                .setWord(GenericTypeGeneratorUtils.generateExecutableTypeParameters(executable))
                 .setWordIfPresent(generateReturn(executable))
                 .setTextPart(generateName(executable))
                 .setWord(generateParameters(executable, this::generateParameterWithType))

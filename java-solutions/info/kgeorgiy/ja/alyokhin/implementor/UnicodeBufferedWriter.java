@@ -16,7 +16,7 @@ public class UnicodeBufferedWriter implements Closeable {
     /**
      * Constructor for wrapped {@link BufferedWriter}
      *
-     * @param bufferedWriter {@link BufferedWriter} instance to be wrapped.
+     * @param bufferedWriter {@code BufferedWriter} instance to be wrapped.
      */
     public UnicodeBufferedWriter(BufferedWriter bufferedWriter) {
         this.bufferedWriter = bufferedWriter;
@@ -25,7 +25,7 @@ public class UnicodeBufferedWriter implements Closeable {
     /**
      * Converts given string to Unicode
      *
-     * @param s {@link String} to convert
+     * @param s {@code String} to convert
      * @return converted string
      */
     private static String toUnicode(String s) {
@@ -44,7 +44,7 @@ public class UnicodeBufferedWriter implements Closeable {
      * Writes given <var>str</var> to wrapped {@link BufferedWriter} in Unicode.
      * Uses {@link BufferedWriter#write(String)}
      *
-     * @param str {@link String} to be written.
+     * @param str {@code String} to be written.
      * @throws IOException if {@link BufferedWriter#write(String)} throws any error.
      */
     public void write(String str) throws IOException {

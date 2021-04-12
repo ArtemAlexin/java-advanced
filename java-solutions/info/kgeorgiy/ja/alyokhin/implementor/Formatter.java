@@ -32,7 +32,7 @@ public class Formatter {
      * Apply <var>action</var> for each {@link String} in <var>strings</var> in iteration order.
      *
      * @param strings vararg of string to be appended.
-     * @param action  {@link Function} to be applied.
+     * @param action  {@code Function} to be applied.
      * @return a reference to this object.
      */
     private Formatter doActionIfPresent(Function<String, Formatter> action, String... strings) {
@@ -188,7 +188,7 @@ public class Formatter {
     }
 
     /**
-     * Returns {@link String} representing formatted text.
+     * Returns {@code String} representing formatted text.
      * Formatter is cleaned using {@link #newFormatter()}.
      * Invokes also {@link #doAction}.
      *

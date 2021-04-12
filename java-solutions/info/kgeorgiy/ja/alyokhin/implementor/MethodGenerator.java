@@ -20,7 +20,7 @@ public class MethodGenerator extends AbstractExecutableGenerator<Method> {
     private static final Formatter formatter = new Formatter();
 
     /**
-     * Returns {@link String} representation of the default value of provided <var>token</var>.
+     * Returns {@code String} representation of the default value of provided <var>token</var>.
      * Example <code>"null"</code> for any {@link Object}.
      *
      * @param token which represent a class default value of which must be generated.
@@ -33,18 +33,18 @@ public class MethodGenerator extends AbstractExecutableGenerator<Method> {
 
     /**
      * Returns {@link String} representation the provided <var>method</var> return type name.
-     * Invokes {@link Method#getGenericReturnType()} and {@link GenericTypeGeneratorUtils#getClassName}.
+     * Invokes {@link Method#getGenericReturnType()}.
      *
-     * @param method {@link Method} return value of which must be generated.
+     * @param method {@code Method} return value of which must be generated.
      * @return type representation.
      */
     @Override
     protected String generateReturn(Method method) {
-        return GenericTypeGeneratorUtils.getClassName(method.getGenericReturnType());
+        return method.getReturnType().getCanonicalName();
     }
 
     /**
-     * Returns {@link String} representation the provided <var>method</var> name.
+     * Returns {@code String} representation the provided <var>method</var> name.
      * Invokes {@link Method#getName()}.
      *
      * @param method {@link Method} name of which must be generated.
@@ -56,9 +56,9 @@ public class MethodGenerator extends AbstractExecutableGenerator<Method> {
     }
 
     /**
-     * Returns {@link String} representation the provided <var>method</var> main part(between brackets).
+     * Returns {@code String} representation the provided <var>method</var> main part(between brackets).
      *
-     * @param method {@link Method} main part of which must be generated.
+     * @param method {@code Method} main part of which must be generated.
      * @return main <var>method</var> part representation.
      */
     @Override

@@ -26,7 +26,6 @@ public class VisitorCleaner extends SimpleFileVisitor<Path> {
 
     /**
      * Is equivalent of {@code visit(file)}.
-     *
      * @see #visit
      */
     @Override
@@ -36,7 +35,6 @@ public class VisitorCleaner extends SimpleFileVisitor<Path> {
 
     /**
      * Is equivalent of {@code visit(dir)}.
-     *
      * @see #visit
      */
     @Override

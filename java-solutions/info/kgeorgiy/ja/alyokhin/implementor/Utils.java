@@ -98,5 +98,5 @@ public class Utils {
     /**
      * Constant equal to one forward slash for code generation.
      */
-    public static final String JarFileSeparator = "/";
+    public static final String JAR_FILE_SEPARATOR = "/";
 }

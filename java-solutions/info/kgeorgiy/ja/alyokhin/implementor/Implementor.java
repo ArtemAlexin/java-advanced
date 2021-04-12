@@ -1,6 +1,5 @@
 package info.kgeorgiy.ja.alyokhin.implementor;
 
-import info.kgeorgiy.ja.alyokhin.implementor.generic.GenericTypeGeneratorUtils;
 import info.kgeorgiy.java.advanced.implementor.ImplerException;
 import info.kgeorgiy.java.advanced.implementor.JarImpler;
 
@@ -495,14 +494,14 @@ public class Implementor implements JarImpler {
 
     /**
      * Returns {@code String} representation of relative path to the class provided by <var>token</var>.
-     * {@link Utils#JarFileSeparator} is used as a delimiter.
+     * {@link Utils#JAR_FILE_SEPARATOR} is used as a delimiter.
      *
      * @param token type token representing class.
      * @return relative path to the class.
      */
     private static String getNameForJar(Class<?> token) {
-        return String.join(JarFileSeparator, getPackageName(token).split("\\.")) +
-                JarFileSeparator + getCompiledClassName(token);
+        return String.join(JAR_FILE_SEPARATOR, getPackageName(token).split("\\.")) +
+                JAR_FILE_SEPARATOR + getCompiledClassName(token);
     }
 
     /**

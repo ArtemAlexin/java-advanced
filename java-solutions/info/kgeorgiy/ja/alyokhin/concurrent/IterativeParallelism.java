@@ -8,7 +8,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+/**
+ * Implementation of {@link AdvancedIP} iterative parallelism support.
+ */
 public class IterativeParallelism implements AdvancedIP {
     private static <T> List<List<T>> parallelizeList(int threads, List<T> list) {
         int realNumberOfThreads = Math.min(threads, list.size());
@@ -80,51 +82,70 @@ public class IterativeParallelism implements AdvancedIP {
                 x -> x.flatMap(Function.<Stream<? extends R>>identity()).collect(Collectors.toList()));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String join(int threads, List<?> values) throws InterruptedException {
         return apply(threads, values,
                 x -> x.map(Object::toString).collect(Collectors.joining()),
                 x -> x.collect(Collectors.joining()));
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T> List<T> filter(int threads, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
         return getListResult(threads, values, x -> x.filter(predicate));
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T, U> List<U> map(int threads, List<? extends T> values, Function<? super T, ? extends U> f) throws InterruptedException {
         return getListResult(threads, values, x -> x.map(f));
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T> T maximum(int threads, List<? extends T> values, Comparator<? super T> comparator) throws InterruptedException {
         return apply(threads, values,
                 x -> x.max(comparator).orElseThrow());
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T> T minimum(int threads, List<? extends T> values, Comparator<? super T> comparator) throws InterruptedException {
         return maximum(threads, values, comparator.reversed());
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T> boolean all(int threads, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
         return !any(threads, values, predicate.negate());
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T> boolean any(int threads, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
         return apply(threads, values,
                 x -> x.anyMatch(predicate),
                 x -> x.anyMatch(Boolean::booleanValue));
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T> T reduce(int threads, List<T> values, Monoid<T> monoid) throws InterruptedException {
         return mapReduce(threads, values, Function.identity(), monoid);
     }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T, R> R mapReduce(int threads, List<T> values, Function<T, R> lift, Monoid<R> monoid) throws InterruptedException {
         return apply(threads, values,

@@ -47,6 +47,7 @@ public class IterativeParallelism implements AdvancedIP {
             try {
                 threadList.get(i).join();
             } catch (InterruptedException e) {
+                threadList.get(i).interrupt();
                 if (Objects.isNull(interruptedException)) {
                     interruptedException = new InterruptedException("One off threads was interrupted");
                 }
@@ -131,4 +132,3 @@ public class IterativeParallelism implements AdvancedIP {
                 x -> x.reduce(monoid.getIdentity(), monoid.getOperator()));
     }
 }
-

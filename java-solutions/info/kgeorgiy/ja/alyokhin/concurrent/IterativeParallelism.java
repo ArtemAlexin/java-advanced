@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 /**
  * Implementation of {@link AdvancedIP} iterative parallelism support.
  */
+@SuppressWarnings("unused")
 public class IterativeParallelism implements AdvancedIP {
     private final ParallelMapper parallelMapper;
 

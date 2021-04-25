@@ -14,6 +14,11 @@ public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
         this.comparator = comparator;
     }
 
+    private ArraySet(List<T> list, Comparator<? super T> cmp) {
+        arr = new ListWithOrder<>(list);
+        comparator = cmp;
+    }
+
     public ArraySet(Collection<? extends T> collection, Comparator<? super T> cmp) {
         Set<T> tmp = new TreeSet<>(cmp);
         tmp.addAll(collection);

@@ -54,8 +54,7 @@ public class IterativeParallelism implements AdvancedIP {
         List<R> res = new ArrayList<>(Collections.nCopies(listOfTasks.size(), null));
         for (int i = 0; i < listOfTasks.size(); i++) {
             final int idx = i;
-            Thread thread = new Thread(() -> res.set(idx,
-                    function.apply(listOfTasks.get(idx).stream())));
+            Thread thread = new Thread(() -> res.set(idx, function.apply(listOfTasks.get(idx).stream())));
             threadList.add(thread);
             thread.start();
         }
@@ -70,6 +69,7 @@ public class IterativeParallelism implements AdvancedIP {
                 threadList.get(i).join();
             } catch (InterruptedException e) {
                 threadList.get(i).interrupt();
+                // :NOTE: it makes more sense to also interrupt all following threads
                 if (Objects.isNull(interruptedException)) {
                     interruptedException = new InterruptedException("One off threads was interrupted");
                 }

@@ -53,7 +53,7 @@ public class ParallelMapperImpl implements ParallelMapper {
     /**
      * Basic constructor.
      *
-     * @param threads Number of threads
+     * @param threads Number of threads to be used by mapper
      */
     public ParallelMapperImpl(final int threads) {
         if (threads <= 0) {

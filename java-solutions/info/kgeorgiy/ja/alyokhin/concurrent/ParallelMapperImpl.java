@@ -3,199 +3,97 @@ package info.kgeorgiy.ja.alyokhin.concurrent;
 import info.kgeorgiy.java.advanced.mapper.ParallelMapper;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
- * Implementation of {@link ParallelMapper}. Creates given number of threads upon creation and tasks queue.
- * Threads are waiting for new tasks to appear and greedily performs them. Tasks are expected to be mapping queries.
+ * Implementation of {@link ParallelMapper}.
  */
 public class ParallelMapperImpl implements ParallelMapper {
-    private final List<Thread> threads;
-    private final BlockingTaskQueue taskQueue;
-    private boolean shutdown = false;
+    private final List<Thread> threadList;
+    private final BlockingQueue taskQueue;
 
-    /**
-     * Basic constructor. Creates given number of threads and initializes tasks queue.
-     *
-     * @param threads Number of threads to distribute tasks among
-     */
-    public ParallelMapperImpl(final int threads) {
-        if (threads <= 0) {
-            throw new IllegalArgumentException("Number of threads cannot be negative");
+    private boolean closed = false;
+
+    private static void joinForce(Thread thread) {
+        while (true) {
+            try {
+                thread.join();
+                break;
+            } catch (InterruptedException ignored) {
+            }
         }
+    }
 
-        taskQueue = new BlockingTaskQueue();
+    private void joinAll() {
+        threadList.forEach(ParallelMapperImpl::joinForce);
+    }
 
-        final Runnable workerRoutine = () -> {
+    private Runnable createJob() {
+        return () -> {
             try {
                 while (!Thread.interrupted()) {
-                    taskQueue.getNextTask().run();
+                    taskQueue.getNextRunnable().run();
                 }
-            } catch (final InterruptedException e) {
-                // Ignored
+            } catch (final InterruptedException ignored) {
+
             } finally {
                 Thread.currentThread().interrupt();
             }
         };
+    }
 
-        this.threads = IntStream.range(0, threads).mapToObj(i -> new Thread(workerRoutine))
+    private List<Thread> createThreads(int size, Runnable task) {
+        return Stream.generate(() -> new Thread(task))
+                .limit(size)
                 .collect(Collectors.toCollection(ArrayList::new));
-        this.threads.forEach(Thread::start);
     }
 
     /**
-     * Performs mapping query.
+     * Basic constructor.
      *
-     * @param function Map function to perform
-     * @param list     List of elements to map
-     * @param <T>      Map input type
-     * @param <R>      Map output type
-     * @return List of mapped elements
-     * @throws InterruptedException Transparent exception received from threads
+     * @param threads Number of threads
+     */
+    public ParallelMapperImpl(final int threads) {
+        if (threads <= 0) {
+            throw new IllegalArgumentException("Invalid number of threads.");
+        }
+        taskQueue = new BlockingQueue();
+        this.threadList = createThreads(threads, createJob());
+        this.threadList.forEach(Thread::start);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public <T, R> List<R> map(final Function<? super T, ? extends R> function, final List<? extends T> list)
             throws InterruptedException {
-        final MappingTaskBatch<T, R> newBatch;
+        final Task<T, R> task;
 
         synchronized (this) {
-            if (shutdown) {
-                throw new IllegalStateException("Attempted to enqueue task to shut down mapper");
+            if (closed) {
+                throw new IllegalStateException("Adding tasks to the closed mapper is forbidden");
             }
-            newBatch = new MappingTaskBatch<>(function, list);
-            taskQueue.addTask(newBatch);
+            task = new Task<>(function, list);
+            taskQueue.addTask(task);
         }
 
-        return newBatch.getResult();
+        return task.getResult();
     }
 
     /**
-     * Terminates all generated threads.
+     * {@inheritDoc}
      */
     @Override
     public void close() {
         synchronized (this) {
-            shutdown = true;
-            threads.forEach(Thread::interrupt);
-            taskQueue.forEach(MappingTaskBatch::cancel);
+            closed = true;
+            threadList.forEach(Thread::interrupt);
+            taskQueue.forEach(Task::stop);
         }
-        threads.forEach(thread -> {
-            while (true) {
-                try {
-                    thread.join();
-                    break;
-                } catch (final InterruptedException e) {
-                    // ignore
-                }
-            }
-        });
-    }
-
-    private static class BlockingTaskQueue {
-        private final Queue<MappingTaskBatch<?, ?>> queue = new ArrayDeque<>();
-
-        synchronized void addTask(final MappingTaskBatch<?, ?> task) {
-            queue.add(task);
-            notifyAll();
-        }
-
-        synchronized Runnable getNextTask() throws InterruptedException {
-            while (queue.isEmpty()) {
-                wait();
-            }
-
-            final MappingTaskBatch<?, ?> head = queue.element();
-            final Runnable task = head.getNextMappingTask();
-            if (head.isFullyStarted()) {
-                queue.remove();
-            }
-
-            return task;
-        }
-
-        synchronized void forEach(final Consumer<MappingTaskBatch<?, ?>> consumer) {
-            queue.forEach(consumer);
-        }
-    }
-
-    private static class MappingTaskBatch<T, R> {
-        private final Queue<Runnable> mappingTasks = new ArrayDeque<>();
-        private final List<R> results;
-        private final List<RuntimeException> errors = new ArrayList<>();
-
-        private boolean doneOrCancelled = false;
-        private int awaitingStart;
-        private int awaitingCompletion;
-
-        MappingTaskBatch(final Function<? super T, ? extends R> mappingFunction, final List<? extends T> input) {
-            this.results = new ArrayList<>(Collections.nCopies(input.size(), null));
-            this.awaitingStart = this.awaitingCompletion = input.size();
-
-            int index = 0;
-            for (final T key : input) {
-                final int finalIndex = index;
-                mappingTasks.add(() -> {
-                    try {
-                        setResult(finalIndex, mappingFunction.apply(key));
-                    } catch (final RuntimeException e) {
-                        addError(e);
-                    } finally {
-                        registerCompletion();
-                    }
-                });
-                index++;
-            }
-        }
-
-        public synchronized List<R> getResult() throws InterruptedException {
-            while (!doneOrCancelled) {
-                wait();
-            }
-
-            if (errors.isEmpty()) {
-                return results;
-            } else {
-                final RuntimeException first = errors.get(0);
-                errors.stream().skip(1).forEach(first::addSuppressed);
-                throw first;
-            }
-        }
-
-        synchronized void cancel() {
-            this.doneOrCancelled = true;
-            notify();
-        }
-
-        synchronized Runnable getNextMappingTask() {
-            awaitingStart--;
-            return mappingTasks.poll();
-        }
-
-        synchronized boolean isFullyStarted() {
-            return awaitingStart <= 0;
-        }
-
-        private synchronized void setResult(final int index, final R value) {
-            if (doneOrCancelled) {
-                return;
-            }
-            results.set(index, value);
-        }
-
-        private synchronized void addError(final RuntimeException e) {
-            if (doneOrCancelled) {
-                return;
-            }
-            errors.add(e);
-        }
-
-        private synchronized void registerCompletion() {
-            if (--awaitingCompletion == 0) {
-                cancel();
-            }
-        }
+        joinAll();
     }
 }
+

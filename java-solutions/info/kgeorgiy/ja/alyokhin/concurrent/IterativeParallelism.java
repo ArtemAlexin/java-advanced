@@ -69,7 +69,6 @@ public class IterativeParallelism implements AdvancedIP {
                 threadList.get(i).join();
             } catch (InterruptedException e) {
                 threadList.get(i).interrupt();
-                // :NOTE: it makes more sense to also interrupt all following threads
                 if (Objects.isNull(interruptedException)) {
                     interruptedException = new InterruptedException("One off threads was interrupted");
                 }

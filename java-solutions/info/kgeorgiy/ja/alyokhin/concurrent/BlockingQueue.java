@@ -8,6 +8,7 @@ class BlockingQueue {
 
     public synchronized void addTask(final Task<?> task) {
         taskQueue.add(task);
+        // :NOTE: notify() is just fine (and more efficient) here
         notifyAll();
     }
 

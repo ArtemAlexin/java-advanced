@@ -70,7 +70,7 @@ public class ParallelMapperImpl implements ParallelMapper {
     @Override
     public <T, R> List<R> map(final Function<? super T, ? extends R> function, final List<? extends T> list)
             throws InterruptedException {
-        final Task<T, R> task;
+        final Task<R> task;
 
         synchronized (this) {
             if (closed) {

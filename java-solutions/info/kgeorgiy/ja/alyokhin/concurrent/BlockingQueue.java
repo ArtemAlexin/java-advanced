@@ -5,9 +5,9 @@ import java.util.Queue;
 import java.util.function.Consumer;
 
 class BlockingQueue {
-    private final Queue<Task<?, ?>> taskQueue = new ArrayDeque<>();
+    private final Queue<Task<?>> taskQueue = new ArrayDeque<>();
 
-    public synchronized void addTask(final Task<?, ?> task) {
+    public synchronized void addTask(final Task<?> task) {
         taskQueue.add(task);
         notifyAll();
     }
@@ -17,7 +17,7 @@ class BlockingQueue {
             wait();
         }
 
-        final Task<?, ?> head = taskQueue.element();
+        final Task<?> head = taskQueue.element();
         final Runnable task = head.getNext();
         if (head.allStarted()) {
             taskQueue.remove();
@@ -25,7 +25,7 @@ class BlockingQueue {
         return task;
     }
 
-    public synchronized void forEach(final Consumer<Task<?, ?>> consumer) {
+    public synchronized void forEach(final Consumer<Task<?>> consumer) {
         taskQueue.forEach(consumer);
     }
 }

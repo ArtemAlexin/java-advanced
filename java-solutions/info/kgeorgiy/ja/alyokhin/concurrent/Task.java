@@ -3,7 +3,7 @@ package info.kgeorgiy.ja.alyokhin.concurrent;
 import java.util.*;
 import java.util.function.Function;
 
-class Task<T, R> {
+class Task<R> {
     private final Queue<Runnable> tasks = new ArrayDeque<>();
 
     private final List<R> result;
@@ -14,8 +14,8 @@ class Task<T, R> {
     private int leftToComplete;
 
 
-    Task(final Function<? super T, ? extends R> mappingFunction,
-         final List<? extends T> list) {
+    public <T> Task(final Function<? super T, ? extends R> mappingFunction,
+                    final List<? extends T> list) {
         this.result = new ArrayList<>(Collections.nCopies(list.size(), null));
         this.leftToStart = list.size();
         this.leftToComplete = list.size();

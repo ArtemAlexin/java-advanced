@@ -2,7 +2,6 @@ package info.kgeorgiy.ja.alyokhin.concurrent;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
-import java.util.function.Consumer;
 
 class BlockingQueue {
     private final Queue<Task<?>> taskQueue = new ArrayDeque<>();

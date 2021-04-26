@@ -91,7 +91,7 @@ public class ParallelMapperImpl implements ParallelMapper {
         synchronized (this) {
             closed = true;
             threadList.forEach(Thread::interrupt);
-            taskQueue.forEach(Task::stop);
+            taskQueue.stop();
         }
         joinAll();
     }

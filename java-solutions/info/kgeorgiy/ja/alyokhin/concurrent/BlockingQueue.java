@@ -16,16 +16,15 @@ class BlockingQueue {
         while (taskQueue.isEmpty()) {
             wait();
         }
-
-        final Task<?> head = taskQueue.element();
-        final Runnable task = head.getNext();
-        if (head.allStarted()) {
+        final Task<?> element = taskQueue.element();
+        final Runnable task = element.getNext();
+        if (element.allStarted()) {
             taskQueue.remove();
         }
         return task;
     }
 
-    public synchronized void forEach(final Consumer<Task<?>> consumer) {
-        taskQueue.forEach(consumer);
+    public synchronized void stop() {
+        taskQueue.forEach(Task::stop);
     }
 }

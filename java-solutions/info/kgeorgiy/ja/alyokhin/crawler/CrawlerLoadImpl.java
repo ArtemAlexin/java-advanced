@@ -21,19 +21,24 @@ class CrawlerLoadImpl {
     private final Queue<String> loaded = new LinkedBlockingQueue<>();
     private final Map<String, HostTask> hostTaskMap = new ConcurrentHashMap<>();
     private final String inititalLink;
-
+    private final Set<String> hosts;
+    private final boolean visitHosts;
     CrawlerLoadImpl(Downloader downloader,
+                    List<String> hosts,
                     int perHost,
                     String initialLink,
                     ExecutorService loaderExecutorService,
                     ExecutorService processorExecutorService,
+                    boolean visitHosts,
                     int depth) {
         this.downloader = downloader;
         this.perHost = perHost;
         this.loaderExecutorService = loaderExecutorService;
         this.processorExecutorService = processorExecutorService;
         this.depth = depth;
+        this.visitHosts = visitHosts;
         this.inititalLink = initialLink;
+        this.hosts = new HashSet<>(hosts);
     }
 
     public Result getResult() {
@@ -66,20 +71,22 @@ class CrawlerLoadImpl {
             errors.put(link, e);
             return;
         }
-        phaser.register();
-        hostTaskMap.computeIfAbsent(host, x -> new HostTask()).addTask(() -> {
-            try {
-                Document document = downloader.download(link);
-                loaded.add(link);
-                if (processNextDepth) {
-                    extractLinks(currentDepthLink, phaser, document);
+        if (!this.visitHosts || hosts.contains(host)) {
+            phaser.register();
+            hostTaskMap.computeIfAbsent(host, x -> new HostTask()).addTask(() -> {
+                try {
+                    Document document = downloader.download(link);
+                    loaded.add(link);
+                    if (processNextDepth) {
+                        extractLinks(currentDepthLink, phaser, document);
+                    }
+                } catch (IOException e) {
+                    errors.put(link, e);
+                } finally {
+                    phaser.arriveAndDeregister();
                 }
-            } catch (IOException e) {
-                errors.put(link, e);
-            } finally {
-                phaser.arriveAndDeregister();
-            }
-        });
+            });
+        }
     }
 
     private void extractLinks(Queue<String> currentDepthLink, Phaser phaser, Document document) {

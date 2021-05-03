@@ -1,13 +1,18 @@
 package info.kgeorgiy.ja.alyokhin.crawler;
 
+import info.kgeorgiy.java.advanced.crawler.AdvancedCrawler;
 import info.kgeorgiy.java.advanced.crawler.Crawler;
 import info.kgeorgiy.java.advanced.crawler.Downloader;
 import info.kgeorgiy.java.advanced.crawler.Result;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class WebCrawler implements Crawler {
+public class WebCrawler implements AdvancedCrawler {
     public static final int TIMEOUT = 800;
     private final Downloader downloader;
     private final int perHost;
@@ -24,10 +29,12 @@ public class WebCrawler implements Crawler {
     @Override
     public Result download(String url, int depth) {
         return new CrawlerLoadImpl(downloader,
+                Collections.emptyList(),
                 perHost,
                 url,
                 loaderExecutorService,
                 processorExecutorService,
+                false,
                 depth).getResult();
     }
 
@@ -47,5 +54,17 @@ public class WebCrawler implements Crawler {
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+
+    @Override
+    public Result download(String url, int depth, List<String> hosts) {
+        return new CrawlerLoadImpl(downloader,
+                hosts,
+                perHost,
+                url,
+                loaderExecutorService,
+                processorExecutorService,
+                true,
+                depth).getResult();
     }
 }

@@ -26,16 +26,19 @@ public class WebCrawler implements AdvancedCrawler {
         this.perHost = perHost;
     }
 
+    private CrawlerLoadImpl.Builder initBuild(String url, int depth) {
+        return new CrawlerLoadImpl.Builder()
+                .withDownloader(downloader)
+                .withPerHost(perHost)
+                .withInitialLink(url)
+                .withloaderExecutorService(loaderExecutorService)
+                .withprocessorExecutorService(processorExecutorService)
+                .withDepth(depth);
+    }
+
     @Override
     public Result download(String url, int depth) {
-        return new CrawlerLoadImpl(downloader,
-                Collections.emptyList(),
-                perHost,
-                url,
-                loaderExecutorService,
-                processorExecutorService,
-                false,
-                depth).getResult();
+        return initBuild(url, depth).build().getResult();
     }
 
     @Override
@@ -58,13 +61,6 @@ public class WebCrawler implements AdvancedCrawler {
 
     @Override
     public Result download(String url, int depth, List<String> hosts) {
-        return new CrawlerLoadImpl(downloader,
-                hosts,
-                perHost,
-                url,
-                loaderExecutorService,
-                processorExecutorService,
-                true,
-                depth).getResult();
+        return initBuild(url, depth).withHosts(hosts).build().getResult();
     }
 }

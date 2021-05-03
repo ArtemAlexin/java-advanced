@@ -1,9 +1,6 @@
 package info.kgeorgiy.ja.alyokhin.crawler;
 
-import info.kgeorgiy.java.advanced.crawler.Document;
-import info.kgeorgiy.java.advanced.crawler.Downloader;
-import info.kgeorgiy.java.advanced.crawler.Result;
-import info.kgeorgiy.java.advanced.crawler.URLUtils;
+import info.kgeorgiy.java.advanced.crawler.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -11,34 +8,20 @@ import java.util.*;
 import java.util.concurrent.*;
 
 class CrawlerLoadImpl {
-    private final Downloader downloader;
-    private final int perHost;
-    private final ExecutorService loaderExecutorService;
-    private final ExecutorService processorExecutorService;
-    private final int depth;
-    private final Map<String, IOException> errors = new ConcurrentHashMap<>();
-    private final Set<String> visited = ConcurrentHashMap.newKeySet();
-    private final Queue<String> loaded = new LinkedBlockingQueue<>();
-    private final Map<String, HostTask> hostTaskMap = new ConcurrentHashMap<>();
-    private final String inititalLink;
-    private final Set<String> hosts;
-    private final boolean visitHosts;
-    CrawlerLoadImpl(Downloader downloader,
-                    List<String> hosts,
-                    int perHost,
-                    String initialLink,
-                    ExecutorService loaderExecutorService,
-                    ExecutorService processorExecutorService,
-                    boolean visitHosts,
-                    int depth) {
-        this.downloader = downloader;
-        this.perHost = perHost;
-        this.loaderExecutorService = loaderExecutorService;
-        this.processorExecutorService = processorExecutorService;
-        this.depth = depth;
-        this.visitHosts = visitHosts;
-        this.inititalLink = initialLink;
-        this.hosts = new HashSet<>(hosts);
+    private Downloader downloader;
+    private int perHost;
+    private ExecutorService loaderExecutorService;
+    private ExecutorService processorExecutorService;
+    private int depth;
+    private Map<String, IOException> errors = new ConcurrentHashMap<>();
+    private Set<String> visited = ConcurrentHashMap.newKeySet();
+    private Queue<String> loaded = new LinkedBlockingQueue<>();
+    private Map<String, HostTask> hostTaskMap = new ConcurrentHashMap<>();
+    private String inititalLink;
+    private Set<String> hosts;
+    private boolean visitHosts;
+
+    private CrawlerLoadImpl() {
     }
 
     public Result getResult() {
@@ -115,6 +98,56 @@ class CrawlerLoadImpl {
                 task.run();
                 semaphore.release();
             });
+        }
+    }
+
+    static class Builder {
+        private CrawlerLoadImpl crawlerLoad;
+
+        public Builder() {
+            this.crawlerLoad = new CrawlerLoadImpl();
+        }
+
+        public Builder withDownloader(Downloader downloader) {
+            crawlerLoad.downloader = downloader;
+            return this;
+        }
+
+        public Builder withHosts(List<String> hosts) {
+            crawlerLoad.hosts = new HashSet<>(hosts);
+            crawlerLoad.visitHosts = true;
+            return this;
+        }
+
+        public Builder withPerHost(int perHost) {
+            crawlerLoad.perHost = perHost;
+            return this;
+        }
+
+        public Builder withInitialLink(String link) {
+            crawlerLoad.inititalLink = link;
+            return this;
+        }
+
+        public Builder withloaderExecutorService(ExecutorService loaderExecutorService) {
+            crawlerLoad.loaderExecutorService = loaderExecutorService;
+            return this;
+        }
+
+        public Builder withprocessorExecutorService(ExecutorService processorExecutorService) {
+            crawlerLoad.processorExecutorService = processorExecutorService;
+            return this;
+        }
+
+        public Builder withDepth(int depth) {
+            crawlerLoad.depth = depth;
+            return this;
+        }
+
+        public CrawlerLoadImpl build() {
+            CrawlerLoadImpl copy = crawlerLoad;
+            crawlerLoad = null;
+            return copy;
         }
     }
 }

@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class Utils {
-    private static final long TIMEOUT = 10;
+    private static final long TIMEOUT = 10; // :NOTE: time unit in the name
 
     private Utils() {
     }
@@ -67,6 +67,7 @@ public class Utils {
         try {
             if (!executorService.awaitTermination(TIMEOUT, TimeUnit.SECONDS)) {
                 executorService.shutdownNow();
+                // :NOTE: does not actually close resources
             }
         } catch (InterruptedException e) {
             executorService.shutdownNow();

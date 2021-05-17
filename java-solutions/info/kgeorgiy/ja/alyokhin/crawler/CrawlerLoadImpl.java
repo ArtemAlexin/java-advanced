@@ -129,12 +129,12 @@ class CrawlerLoadImpl {
             return this;
         }
 
-        public Builder withloaderExecutorService(ExecutorService loaderExecutorService) {
+        public Builder withLoaderExecutorService(ExecutorService loaderExecutorService) {
             crawlerLoad.loaderExecutorService = loaderExecutorService;
             return this;
         }
 
-        public Builder withprocessorExecutorService(ExecutorService processorExecutorService) {
+        public Builder withProcessorExecutorService(ExecutorService processorExecutorService) {
             crawlerLoad.processorExecutorService = processorExecutorService;
             return this;
         }

@@ -1,12 +1,9 @@
 package info.kgeorgiy.ja.alyokhin.crawler;
 
 import info.kgeorgiy.java.advanced.crawler.AdvancedCrawler;
-import info.kgeorgiy.java.advanced.crawler.Crawler;
 import info.kgeorgiy.java.advanced.crawler.Downloader;
 import info.kgeorgiy.java.advanced.crawler.Result;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,8 +28,8 @@ public class WebCrawler implements AdvancedCrawler {
                 .withDownloader(downloader)
                 .withPerHost(perHost)
                 .withInitialLink(url)
-                .withloaderExecutorService(loaderExecutorService)
-                .withprocessorExecutorService(processorExecutorService)
+                .withLoaderExecutorService(loaderExecutorService)
+                .withProcessorExecutorService(processorExecutorService)
                 .withDepth(depth);
     }
 

@@ -1,6 +1,9 @@
 package info.kgeorgiy.ja.alyokhin.crawler;
 
-import info.kgeorgiy.java.advanced.crawler.*;
+import info.kgeorgiy.java.advanced.crawler.Document;
+import info.kgeorgiy.java.advanced.crawler.Downloader;
+import info.kgeorgiy.java.advanced.crawler.Result;
+import info.kgeorgiy.java.advanced.crawler.URLUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -13,10 +16,10 @@ class CrawlerLoadImpl {
     private ExecutorService loaderExecutorService;
     private ExecutorService processorExecutorService;
     private int depth;
-    private Map<String, IOException> errors = new ConcurrentHashMap<>();
-    private Set<String> visited = ConcurrentHashMap.newKeySet();
-    private Queue<String> loaded = new LinkedBlockingQueue<>();
-    private Map<String, HostTask> hostTaskMap = new ConcurrentHashMap<>();
+    private final Map<String, IOException> errors = new ConcurrentHashMap<>();
+    private final Set<String> visited = ConcurrentHashMap.newKeySet();
+    private final Queue<String> loaded = new LinkedBlockingQueue<>();
+    private final Map<String, HostTask> hostTaskMap = new ConcurrentHashMap<>();
     private String inititalLink;
     private Set<String> hosts;
     private boolean visitHosts;

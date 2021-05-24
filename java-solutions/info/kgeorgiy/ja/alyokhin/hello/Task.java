@@ -7,11 +7,11 @@ import java.util.function.Predicate;
 
 public class Task {
     private static final Logger logger = ConsoleLogger.getInstance();
-    private final Packet packet;
+    private final Packet<String> packet;
     private final DatagramSocket datagramSocket;
     private final Predicate<String> responseValidator;
 
-    public Task(Packet packet, DatagramSocket datagramSocket, Predicate<String> responseValidator) {
+    public Task(Packet<String> packet, DatagramSocket datagramSocket, Predicate<String> responseValidator) {
         this.packet = packet;
         this.datagramSocket = datagramSocket;
         this.responseValidator = responseValidator;

@@ -7,12 +7,36 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class Utils {
-    private static final long TIMEOUT = 10; // :NOTE: time unit in the name
+    private static final long TIMEOUT_SECONDS = 10;
+    public static final long SOCKET_TIMEOUT_MS = 200;
+
+    private static final Logger logger = ConsoleLogger.getInstance();
 
     private Utils() {
     }
 
+    public static String buildServerResponse(String message) {
+        return "Hello, " + message;
+    }
+
+    public static String buildRequest(String prefix, int index, int requesNum) {
+        return (prefix + index + "_" + requesNum);
+    }
+
     public static final Charset CHARSET = StandardCharsets.UTF_8;
+
+    private static int testPart(String response, int start, int value) {
+        int pos = Utils.dropWhile(response, start, Predicate.not(Character::isDigit));
+        return Utils.dropWhileAndTest(response, pos, Character::isDigit, String.valueOf(value));
+    }
+
+    public static boolean validate(String response, int index, int requestNum) {
+        int firstPartPos = testPart(response, 0, index);
+        if (firstPartPos == -1 || (testPart(response, firstPartPos, requestNum) == -1)) {
+            logger.log("error:" + response);
+        }
+        return (firstPartPos != -1) && (testPart(response, firstPartPos, requestNum) != -1);
+    }
 
     /**
      * Finds first position where predicate does not met, starting from start pos or {@code s.length()} if there is no such position.
@@ -60,14 +84,16 @@ public class Utils {
 
     /**
      * Correct shutdown of executor service
+     *
      * @param executorService executor Service to shut down
      */
     public static void shutdownAndAwaitTermination(ExecutorService executorService) {
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(TIMEOUT, TimeUnit.SECONDS)) {
+            if (!executorService.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 executorService.shutdownNow();
-                // :NOTE: does not actually close resources
+                if (!executorService.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS))
+                    logger.logError("Pool did not terminate");
             }
         } catch (InterruptedException e) {
             executorService.shutdownNow();

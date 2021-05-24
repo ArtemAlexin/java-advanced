@@ -1,7 +1,6 @@
 package info.kgeorgiy.ja.alyokhin.hello;
 
 import info.kgeorgiy.java.advanced.hello.HelloClient;
-import info.kgeorgiy.java.advanced.hello.Util;
 
 import java.net.*;
 import java.util.Arrays;
@@ -9,14 +8,11 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class HelloUDPClient implements HelloClient {
     private static final Logger logger = ConsoleLogger.getInstance();
-    private final static Pattern VALIDATE_REGEXP = Pattern.compile("([^0-9]*)([0-9]+)([^0-9]+)([0-9]+)([^0-9]*)");
 
     @Override
     public void run(String host, int port, String prefix, int threads, int requests) {
@@ -34,17 +30,11 @@ public class HelloUDPClient implements HelloClient {
     private void createTask(SocketAddress address, String prefix, int index, int numberToSend) {
         try (DatagramSocket datagramSocket = new DatagramSocket()) {
             datagramSocket.setSoTimeout(100);
-            Packet packet = new PacketImpl(datagramSocket.getReceiveBufferSize(), address);
+            Packet<String> packet = new PacketStringImpl(datagramSocket.getReceiveBufferSize(), address);
             IntStream.range(0, numberToSend).forEach(requesNum -> {
                 String request = (prefix + index + "_" + requesNum);
                 logger.log("Request:" + request);
-                Task task = new Task(packet, datagramSocket, response -> {
-                    int firstPartPos = testPart(response, 0, index);
-                    if (firstPartPos == -1 || (testPart(response, firstPartPos, requesNum) == -1)) {
-                        logger.log("error:" + response);
-                    }
-                    return (firstPartPos != -1) && (testPart(response, firstPartPos, requesNum) != -1);
-                });
+                Task task = new Task(packet, datagramSocket, response -> Utils.validate(response, index, requesNum));
                 task.completeTask(request);
             });
         } catch (SocketException e) {
@@ -52,10 +42,6 @@ public class HelloUDPClient implements HelloClient {
         }
     }
 
-    private int testPart(String response, int start, int value) {
-        int pos = Utils.dropWhile(response, start, Predicate.not(Character::isDigit));
-        return Utils.dropWhileAndTest(response, pos, Character::isDigit, String.valueOf(value));
-    }
 
     /**
      * Runs {@code HelloUDPClient}.

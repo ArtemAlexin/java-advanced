@@ -1,7 +1,5 @@
 package info.kgeorgiy.ja.alyokhin.hello;
 
-import info.kgeorgiy.java.advanced.hello.HelloServer;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,17 +10,14 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
 
-public class HelloUDPServer implements HelloServer {
+public class HelloUDPServer extends AbstractUPDServer {
     private static final Logger logger = ConsoleLogger.getInstance();
 
     private DatagramSocket datagramSocket;
-    private int size;
-    private ExecutorService executorServiceListen;
-    private ExecutorService executorServiceSend;
-    private BlockingQueue<Packet> waitingTasks;
+    private BlockingQueue<Packet<String>> waitingTasks;
 
     @Override
-    public void start(int port, int threads) {
+    void startSocket(int port, int threads) {
         try {
             datagramSocket = new DatagramSocket(port);
             size = datagramSocket.getReceiveBufferSize();
@@ -30,16 +25,14 @@ public class HelloUDPServer implements HelloServer {
             logger.logError("Failed to start HelloUDPServer", e);
         }
         waitingTasks = new ArrayBlockingQueue<>(threads);
-        Stream.generate(() -> new PacketImpl(size)).limit(threads).forEach(waitingTasks::add);
-        executorServiceSend = Executors.newFixedThreadPool(threads);
-        executorServiceListen = Executors.newSingleThreadExecutor();
-        executorServiceListen.submit(this::listen);
+        Stream.generate(() -> new PacketStringImpl(size)).limit(threads).forEach(waitingTasks::add);
     }
 
-    private void listen() {
+    @Override
+    protected void listen() {
         while (!datagramSocket.isClosed() && !Thread.interrupted()) {
             try {
-                Packet packet = waitingTasks.take();
+                Packet<String> packet = waitingTasks.take();
                 String response = packet.receive(datagramSocket);
                 executorServiceSend.submit(() -> {
                     send(packet, response);
@@ -53,9 +46,9 @@ public class HelloUDPServer implements HelloServer {
         }
     }
 
-    private void send(Packet packet, String response) {
+    private void send(Packet<String> packet, String response) {
         try {
-            String toSend = "Hello, " + response;
+            String toSend = Utils.buildServerResponse(response);
             packet.send(toSend, datagramSocket);
         } catch (IOException e) {
             logger.logErrorIfOpened(datagramSocket, "Failed to send package", e);

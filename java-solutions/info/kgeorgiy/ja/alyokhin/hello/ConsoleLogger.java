@@ -25,4 +25,9 @@ public class ConsoleLogger implements Logger {
     public void logError(String message, Throwable throwable) {
         System.err.println(message + " " + throwable.getMessage());
     }
+
+    @Override
+    public void logError(String message) {
+        System.err.println(message);
+    }
 }

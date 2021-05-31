@@ -1,17 +1,14 @@
 package info.kgeorgiy.ja.alyokhin.i18n;
 
-import info.kgeorgiy.ja.alyokhin.i18n.calculators.DateStatisticCalculator;
-import info.kgeorgiy.ja.alyokhin.i18n.calculators.NumberStatisticCalculator;
-import info.kgeorgiy.ja.alyokhin.i18n.calculators.StringStatisticCalculator;
 import info.kgeorgiy.ja.alyokhin.i18n.collectors.DateStatCollector;
 import info.kgeorgiy.ja.alyokhin.i18n.collectors.MoneyStatCollector;
 import info.kgeorgiy.ja.alyokhin.i18n.collectors.NumberStatCollector;
 import info.kgeorgiy.ja.alyokhin.i18n.collectors.StringStatCollector;
-import info.kgeorgiy.ja.alyokhin.i18n.parsers.DateParser;
-import info.kgeorgiy.ja.alyokhin.i18n.parsers.MoneyParser;
 
-import java.text.*;
-import java.util.*;
+import java.text.BreakIterator;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -25,16 +22,16 @@ public class TextStatistics {
         WORD
     }
 
-    private static void putStringStatistics(Map<TextType, StatisticsData<?>> map,
-                                            TextType type,
-                                            Function<Locale, BreakIterator> breakIteratorFactory,
-                                            String text,
-                                            Locale inputLocale,
-                                            Predicate<String> predicate) {
+    private static void putStringStatistics(final Map<TextType, StatisticsData<?>> map,
+                                            final TextType type,
+                                            final Function<Locale, BreakIterator> breakIteratorFactory,
+                                            final String text,
+                                            final Locale inputLocale,
+                                            final Predicate<String> predicate) {
         map.put(type, new StringStatCollector(inputLocale, text, breakIteratorFactory.apply(inputLocale), predicate, type).collect());
     }
 
-    public static Map<TextType, StatisticsData<?>> getStatistics(String text, Locale inputLocale) {
+    public static Map<TextType, StatisticsData<?>> getStatistics(final String text, final Locale inputLocale) {
         final Map<TextType, StatisticsData<?>> map = new HashMap<>();
 
         putStringStatistics(map, TextType.SENTENCE, BreakIterator::getSentenceInstance, text, inputLocale,
@@ -48,3 +45,4 @@ public class TextStatistics {
         return map;
     }
 }
+

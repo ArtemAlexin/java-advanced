@@ -49,12 +49,6 @@ public class HelloUDPClient implements HelloClient {
      * @param args arguments.
      */
     public static void main(final String[] args) {
-        if (args == null || args.length != 5 || Arrays.stream(args).anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException("Invalid arguments");
-        }
-        final int port = Integer.parseInt(args[1]);
-        final int threads = Integer.parseInt(args[3]);
-        final int requests = Integer.parseInt(args[4]);
-        new HelloUDPClient().run(args[0], port, args[2], threads, requests);
+        Utils.clientRun(new HelloUDPClient()::run, args);
     }
 }

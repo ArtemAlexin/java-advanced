@@ -163,4 +163,8 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
             this.socketAddress = socketAddress;
         }
     }
+
+    public static void main(String[] args) {
+        Utils.serverRun(args, HelloUDPNonblockingServer.class);
+    }
 }

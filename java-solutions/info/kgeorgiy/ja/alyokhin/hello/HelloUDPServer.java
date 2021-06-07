@@ -68,15 +68,6 @@ public class HelloUDPServer extends AbstractUPDServer {
      * @param args port threads.
      */
     public static void main(final String[] args) {
-        if (args == null || args.length != 2 || Arrays.stream(args).anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException("Correct usage: HelloUDPServer port threads");
-        }
-        try (final HelloUDPServer server = new HelloUDPServer()) {
-            server.start(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            reader.readLine();
-        } catch (final IOException e) {
-            logger.logError("Failed to read input", e);
-        }
+        Utils.serverRun(args, HelloUDPServer.class);
     }
 }

@@ -139,4 +139,8 @@ public class HelloUDPNonblockingClient extends AbstractUDP implements HelloClien
             return buffer;
         }
     }
+
+    public static void main(String[] args) {
+        Utils.clientRun(new HelloUDPNonblockingClient()::run, args);
+    }
 }

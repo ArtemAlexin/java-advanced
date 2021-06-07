@@ -45,7 +45,7 @@ public class FileUtils {
             return prop;
         }
 
-        PROPS(String prop) {
+        PROPS(final String prop) {
             this.prop = prop;
         }
     }
@@ -56,57 +56,57 @@ public class FileUtils {
     private static final String SECTION_FILE_NAME = "section.html";
     private static final String TOTAL_FILE_NAME = "total.html";
 
-    public static String readResource(Class<?> clazz, String resourceName) throws IOException {
+    public static String readResource(final Class<?> clazz, final String resourceName) throws IOException {
         final URL url = clazz.getResource("resources/" + resourceName);
         if (url == null) {
             throw new FileNotFoundException("Resource file does not exist");
         }
         try {
             return read(Path.of(url.toURI()));
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             throw new IllegalStateException("Uri extracting error");
         }
     }
 
-    public static String read(Path filePath) throws IOException {
+    public static String read(final Path filePath) throws IOException {
         return Files.readString(filePath);
     }
 
-    public static void createDirectory(Path path) throws IOException {
-        Path parent = path.getParent();
+    public static void createDirectory(final Path path) throws IOException {
+        final Path parent = path.getParent();
         if (parent != null) {
             Files.createDirectories(parent);
         }
     }
 
-    public static void writeFile(String file, String data) throws IOException, InvalidPathException {
-        Path filePath = Paths.get(file);
+    public static void writeFile(final String file, final String data) throws IOException, InvalidPathException {
+        final Path filePath = Paths.get(file);
         createDirectory(filePath);
         Files.writeString(filePath, data, StandardCharsets.UTF_8);
     }
 
-    private static List<String> getSections(Locale inputLocale,
-                                            Locale outputLocale,
-                                            Map<TextStatistics.TextType, StatisticsData<?>> data,
-                                            ResourceBundle bundle,
-                                            String statFormat,
-                                            String statFormatUnique,
-                                            String statFormatExample,
-                                            MessageFormat numberFormat,
-                                            Function<TextStatistics.TextType, String>
+    private static List<String> getSections(final Locale inputLocale,
+                                            final Locale outputLocale,
+                                            final Map<TextStatistics.TextType, StatisticsData<?>> data,
+                                            final ResourceBundle bundle,
+                                            final String statFormat,
+                                            final String statFormatUnique,
+                                            final String statFormatExample,
+                                            final MessageFormat numberFormat,
+                                            final Function<TextStatistics.TextType, String>
                                                     sectionNameFunction) throws IOException {
-        BiFunction<Object, MessageFormat, Object> filter =
+        final BiFunction<Object, MessageFormat, Object> filter =
                 (obj, formatter) -> obj == null ?
                         bundle.getString(UNAVAILABLE.getName()) :
                         formatter.format(new Object[]{obj});
-        String section = readResource(FileUtils.class, SECTION_FILE_NAME);
+        final String section = readResource(FileUtils.class, SECTION_FILE_NAME);
         return Arrays.stream(TextStatistics.TextType.values())
                 .map(type -> {
-                    StatisticsData<?> stats = data.get(type);
-                    MessageFormat dataFormat;
-                    String average;
-                    String key;
-                    String sectionName = sectionNameFunction.apply(type);
+                    final StatisticsData<?> stats = data.get(type);
+                    final MessageFormat dataFormat;
+                    final String average;
+                    final String key;
+                    final String sectionName = sectionNameFunction.apply(type);
                     switch (type) {
                         case SENTENCE, LINE, WORD -> {
                             dataFormat = new MessageFormat(bundle.getString(FORMAT_STRING.getName()), inputLocale);
@@ -131,32 +131,32 @@ public class FileUtils {
                 }).collect(Collectors.toList());
     }
 
-    private static String getFormat(ResourceBundle bundle, String statFormat, String average, String key) {
+    private static String getFormat(final ResourceBundle bundle, final String statFormat, final String average, final String key) {
         return MessageFormat.format(statFormat,
                 bundle.getString(key),
                 average);
     }
 
-    private static String getFormatEx(ResourceBundle bundle,
-                                      String statFormatExample,
-                                      MessageFormat numberFormat,
-                                      String sectionName,
-                                      int minLength, Object apply) {
+    private static String getFormatEx(final ResourceBundle bundle,
+                                      final String statFormatExample,
+                                      final MessageFormat numberFormat,
+                                      final String sectionName,
+                                      final int minLength, final Object apply) {
         return MessageFormat.format(statFormatExample,
                 bundle.getString(MIN_LEN.getName() + sectionName),
                 numberFormat.format(new Object[]{minLength}),
                 apply);
     }
 
-    private static String getFormatStat(ResourceBundle bundle,
-                                        String statFormat,
-                                        String sectionName,
-                                        Object apply) {
+    private static String getFormatStat(final ResourceBundle bundle,
+                                        final String statFormat,
+                                        final String sectionName,
+                                        final Object apply) {
         return getFormat(bundle, statFormat, (String) apply, MIN.getName() + sectionName);
     }
 
-    private static String getFormatUniq(ResourceBundle bundle,
-                                        String statFormatUnique, StatisticsData<?> stats, String sectionName) {
+    private static String getFormatUniq(final ResourceBundle bundle,
+                                        final String statFormatUnique, final StatisticsData<?> stats, final String sectionName) {
         return MessageFormat.format(statFormatUnique,
                 bundle.getString(TOTAL.getName() + sectionName),
                 stats.getTotal(),
@@ -164,51 +164,51 @@ public class FileUtils {
                 bundle.getString(UNIQUE.getName()));
     }
 
-    private static String getTotal(List<String> summaryArgs) throws IOException {
-        String total = readResource(FileUtils.class, TOTAL_FILE_NAME);
+    private static String getTotal(final List<String> summaryArgs) throws IOException {
+        final String total = readResource(FileUtils.class, TOTAL_FILE_NAME);
         return String.format(total, summaryArgs.toArray(new Object[0]));
     }
 
-    private static String getTitle(String name, ResourceBundle bundle) throws IOException {
-        String title = readResource(FileUtils.class, TITLE_FILE_NAME);
+    private static String getTitle(final String name, final ResourceBundle bundle) throws IOException {
+        final String title = readResource(FileUtils.class, TITLE_FILE_NAME);
         return String.format(title,
                 MessageFormat.format(bundle.getString(TITLE.getName()), name));
     }
 
-    private static String getHead(ResourceBundle bundle) throws IOException {
-        String head = readResource(FileUtils.class, HEADER_FILE_NAME);
+    private static String getHead(final ResourceBundle bundle) throws IOException {
+        final String head = readResource(FileUtils.class, HEADER_FILE_NAME);
         return String.format(head,
                 bundle.getString(HEADER.getName()));
     }
 
-    public static String generate(Locale iLocale,
-                                  Locale oLocale,
-                                  Map<TextStatistics.TextType, StatisticsData<?>> map,
-                                  String name)
+    public static String generate(final Locale iLocale,
+                                  final Locale oLocale,
+                                  final Map<TextStatistics.TextType, StatisticsData<?>> map,
+                                  final String name)
             throws IOException {
-        ResourceBundle bundle = ResourceBundle
+        final ResourceBundle bundle = ResourceBundle
                 .getBundle("info.kgeorgiy.ja.alyokhin.i18n.resources.Bundle", oLocale);
 
-        String statFormat = bundle.getString(FORMAT_STAT.getName());
-        String statFormatUnique = bundle.getString(FORMAT_UNIQUE.getName());
-        String statFormatExample = bundle.getString(FORMAT_EX.getName());
+        final String statFormat = bundle.getString(FORMAT_STAT.getName());
+        final String statFormatUnique = bundle.getString(FORMAT_UNIQUE.getName());
+        final String statFormatExample = bundle.getString(FORMAT_EX.getName());
 
-        String messageFormat = readResource(FileUtils.class, MESSAGE_FILE_NAME);
-        MessageFormat numberFormat = new MessageFormat(bundle.getString(FORMAT_NUM.getName()), oLocale);
+        final String messageFormat = readResource(FileUtils.class, MESSAGE_FILE_NAME);
+        final MessageFormat numberFormat = new MessageFormat(bundle.getString(FORMAT_NUM.getName()), oLocale);
 
-        String head = getHead(bundle);
-        String title = getTitle(name, bundle);
-        Function<TextStatistics.TextType, String> sectionNameFunction =
+        final String head = getHead(bundle);
+        final String title = getTitle(name, bundle);
+        final Function<TextStatistics.TextType, String> sectionNameFunction =
                 type -> type.toString().charAt(0) + type.toString().substring(1).toLowerCase();
-        List<String> args = new ArrayList<>();
+        final List<String> args = new ArrayList<>();
         args.add(bundle.getString(TOTAL_STAT.getName()));
         Arrays.stream(TextStatistics.TextType.values())
                 .map(t -> getFormat(bundle, statFormat,
                         numberFormat.format(new Object[]{map.get(t).getTotal()}),
                         TOTAL.getName() + sectionNameFunction.apply(t)))
                 .forEach(args::add);
-        String total = getTotal(args);
-        List<String> sections = getSections(iLocale,
+        final String total = getTotal(args);
+        final List<String> sections = getSections(iLocale,
                 oLocale,
                 map,
                 bundle,
@@ -217,8 +217,8 @@ public class FileUtils {
                 statFormatExample,
                 numberFormat,
                 sectionNameFunction);
-        String[] format = new String[3 + sections.size()];
-        String[] firstElements = new String[]{head, title, total};
+        final String[] format = new String[3 + sections.size()];
+        final String[] firstElements = new String[]{head, title, total};
         System.arraycopy(firstElements, 0, format, 0, 3);
         System.arraycopy(sections.toArray(), 0, format, 3, sections.size());
         return String.format(messageFormat, (Object[]) format);

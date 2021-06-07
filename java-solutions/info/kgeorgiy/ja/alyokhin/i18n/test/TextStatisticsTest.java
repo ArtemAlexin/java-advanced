@@ -30,36 +30,37 @@ public class TextStatisticsTest {
         );
     }
 
-    private void test(
-            final Map<TextStatistics.TextType, StatisticsData<?>> statistics,
-            final String testName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    private void test(Map<TextStatistics.TextType, StatisticsData<?>> statistics,
+            String testName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         ResourceBundle bundle = ResourceBundle.getBundle("info.kgeorgiy.ja.alyokhin.i18n.test.resources." + testName, locale);
-        final Class<?> token = StatisticsData.class;
-        final List<String> fieldNames = Arrays.stream(token.getDeclaredFields()).map(Field::getName).collect(Collectors.toList());
+        Class<?> token = StatisticsData.class;
+        List<String> fieldNames = Arrays.stream(token.getDeclaredFields()).map(Field::getName).collect(Collectors.toList());
         for (TextStatistics.TextType type : TextStatistics.TextType.values()) {
             final StatisticsData<?> data = statistics.get(type);
             for (String fieldName : fieldNames) {
-                try {
-                    Method fieldGetter = token.getMethod("get" + Character.toUpperCase(fieldName.charAt(0))
-                            + fieldName.substring(1));
-                    final Object gotObject = fieldGetter.invoke(data);
-                    final String gotString = (gotObject == null) ? "null" : gotObject.toString();
-
-                    try {
-                        final String expectedString = bundle.getString(type.toString().toLowerCase() + "_" +
-                                fieldName);
-                        assertEquals(expectedString, gotString);
-                    } catch (final MissingResourceException e) {
-                        // Ignored.
-                    }
-                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                    throw e;
-                }
+                compare(bundle, token, type, data, fieldName);
             }
         }
     }
+    private Method extractMethod(Class<?> token, String fieldName) throws NoSuchMethodException {
+        return token.getMethod("get" +
+                Character.toUpperCase(fieldName.charAt(0)) +
+                fieldName.substring(1));
+    }
+    private void compare(ResourceBundle bundle, Class<?> token, TextStatistics.TextType type, StatisticsData<?> data, String fieldName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Method getter = extractMethod(token, fieldName);
+        Object obj1 = getter.invoke(data);
+        String calculated = Objects.toString(obj1);
+        try {
+            String expected = bundle.getString(type.toString().toLowerCase() + "_" +
+                    fieldName);
+            assertEquals(expected, calculated);
+        } catch (MissingResourceException e) {
+            // Ignored.
+        }
+    }
 
-    private void commonActions(final String testName, String languageTag) throws IOException, NoSuchMethodException, IllegalAccessException,
+    private void commonActions(String testName, String languageTag) throws IOException, NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
         this.locale = new Locale.Builder().setLanguageTag(languageTag).build();
         final String text = FileUtils.readResource(TextStatisticsTest.class, testName + "_" +

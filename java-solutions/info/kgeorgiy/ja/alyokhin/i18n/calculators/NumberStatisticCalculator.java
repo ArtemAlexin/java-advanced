@@ -13,9 +13,13 @@ public class NumberStatisticCalculator extends AbstractStatisticCalculator<Numbe
     public StatisticsData<Number> calculateStatistics(final TextStatistics.TextType type, List<Number> values) {
         StatisticsData<Number> stats = calculateCommonStatistics(type, values, n -> n.toString().length(),
                 Comparator.comparingDouble(Number::doubleValue));
-        stats.setAverage(values.isEmpty() ? null : values.stream().map(n -> BigDecimal.valueOf(n.doubleValue()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(stats.getTotal()), RoundingMode.HALF_EVEN));
+        if(values.isEmpty()) {
+            stats.setAverage(null);
+        } else {
+            BigDecimal value = BigDecimal.valueOf(values.stream().mapToDouble(Number::doubleValue).average().getAsDouble());
+            value = value.setScale(1, RoundingMode.HALF_EVEN);
+            stats.setAverage(value.doubleValue());
+        }
         return stats;
     }
 }

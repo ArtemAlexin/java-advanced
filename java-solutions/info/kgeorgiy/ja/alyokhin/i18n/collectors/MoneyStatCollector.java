@@ -7,7 +7,7 @@ import info.kgeorgiy.ja.alyokhin.i18n.parsers.MoneyParser;
 
 import java.util.List;
 import java.util.Locale;
-public class MoneyStatCollector extends AbstractStatCollectors<Number> {
+public class MoneyStatCollector extends AbstractStatCollector<Number> {
     public MoneyStatCollector(Locale locale, String text) {
         super(locale, text);
     }

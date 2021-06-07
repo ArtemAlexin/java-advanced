@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiFunction;
 
-public abstract class AbstractStatCollectors<T> {
+public abstract class AbstractStatCollector<T> {
     protected Locale locale;
     protected String text;
 
-    public AbstractStatCollectors(Locale locale, String text) {
+    public AbstractStatCollector(Locale locale, String text) {
         this.locale = locale;
         this.text = text;
     }

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class NumberStatCollector extends AbstractStatCollectors<Number> {
+public class NumberStatCollector extends AbstractStatCollector<Number> {
 
     public NumberStatCollector(Locale locale, String text) {
         super(locale, text);

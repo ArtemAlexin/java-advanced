@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 
-public class DateStatCollector extends AbstractStatCollectors<Date> {
+public class DateStatCollector extends AbstractStatCollector<Date> {
     public DateStatCollector(Locale locale, String text) {
         super(locale, text);
     }

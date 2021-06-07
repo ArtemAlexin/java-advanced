@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
 
-public class StringStatCollector extends AbstractStatCollectors<String> {
+public class StringStatCollector extends AbstractStatCollector<String> {
     private BreakIterator breakIterator;
     private Predicate<String> filter;
     private TextStatistics.TextType type;

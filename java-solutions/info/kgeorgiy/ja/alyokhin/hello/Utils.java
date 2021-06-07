@@ -1,7 +1,15 @@
 package info.kgeorgiy.ja.alyokhin.hello;
 
+import info.kgeorgiy.java.advanced.hello.HelloServer;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -100,4 +108,50 @@ public class Utils {
             Thread.currentThread().interrupt();
         }
     }
+
+    public static void clientRun(Runner runner, String[] args) {
+        if (args == null || args.length != 5 || Arrays.stream(args).anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("Invalid arguments");
+        }
+        final int port = Integer.parseInt(args[1]);
+        final int threads = Integer.parseInt(args[3]);
+        final int requests = Integer.parseInt(args[4]);
+        runner.run(args[0], port, args[2], threads, requests);
+    }
+
+    static void serverRun(final String[] args, final Class<? extends HelloServer> clazz) {
+        if (args == null || args.length != 2) {
+            logger.logError("Usage: HelloUDP[Nonblocking]Server port threads_count");
+            return;
+        }
+
+        if (Arrays.stream(args).anyMatch(Objects::isNull)) {
+            logger.logError("Null arguments are not allowed");
+            return;
+        }
+
+        final int port, threads;
+        try {
+            port = Integer.parseInt(args[0]);
+            threads = Integer.parseInt(args[1]);
+        } catch (final NumberFormatException e) {
+            System.err.println("Failed to parse expected numeric argument: " + e.getMessage());
+            return;
+        }
+        try (final HelloServer server = clazz.getDeclaredConstructor().newInstance()) {
+            server.start(port, threads);
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            logger.logError("Server has been started. Press any key to terminate");
+            reader.readLine();
+        } catch (final IOException e) {
+            logger.logError("IO error occurred: " + e.getMessage());
+        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+            logger.logError("Reflection error occurred: " + e.getMessage());
+        }
+    }
+}
+
+@FunctionalInterface
+interface Runner {
+    void run(String arg1, int port, String args2, int threads, int requests);
 }

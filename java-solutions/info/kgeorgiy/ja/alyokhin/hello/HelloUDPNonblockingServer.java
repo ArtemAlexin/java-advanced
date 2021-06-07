@@ -106,7 +106,7 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
                     x.close();
                 } catch (IOException ignored) { }
             });
-        }finally {
+        } finally {
             Utils.shutdownAndAwaitTermination(executorServiceListen);
             Utils.shutdownAndAwaitTermination(executorServiceSend);
         }
@@ -132,11 +132,12 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         }
 
         public synchronized ByteBuffer takeAndRemoveBuffer() {
-            if (availableBuffers.size() == 1) {
+            ByteBuffer byteBuffer = availableBuffers.remove(availableBuffers.size() - 1);
+            if (availableBuffers.isEmpty()) {
                 datagramChannel.keyFor(select).interestOpsAnd(~SelectionKey.OP_READ);
                 select.wakeup();
             }
-            return availableBuffers.remove(availableBuffers.size() - 1);
+            return byteBuffer;
         }
 
         synchronized void addBufferPacket(ByteBuffer buffer, SocketAddress destination) {
@@ -148,11 +149,12 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         }
 
         synchronized BufferPacket getBufferPacket() {
-            if (bufferPackets.size() == 1) {
+            BufferPacket t = bufferPackets.remove(bufferPackets.size() - 1);
+            if(bufferPackets.isEmpty()) {
                 datagramChannel.keyFor(select).interestOpsAnd(~SelectionKey.OP_WRITE);
                 select.wakeup();
             }
-            return bufferPackets.remove(bufferPackets.size() - 1);
+            return t;
         }
     }
 

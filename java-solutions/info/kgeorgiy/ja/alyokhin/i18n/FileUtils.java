@@ -221,6 +221,6 @@ public class FileUtils {
         String[] firstElements = new String[]{head, title, total};
         System.arraycopy(firstElements, 0, format, 0, 3);
         System.arraycopy(sections.toArray(), 0, format, 3, sections.size());
-        return String.format(messageFormat, format);
+        return String.format(messageFormat, (Object[]) format);
     }
 }

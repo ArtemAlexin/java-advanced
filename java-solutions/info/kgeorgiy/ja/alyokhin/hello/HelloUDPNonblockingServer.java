@@ -10,7 +10,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class HelloUDPNonblockingServer extends AbstractUPDServer {
     private static final Logger logger = ConsoleLogger.getInstance();
@@ -74,18 +73,18 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
             SocketAddress destination = datagramChannel.receive(buffer);
             executorServiceSend.submit(() -> runTask(buffer, destination, context));
         } catch (IOException e) {
-            logger.logError("IO exception occurred during read handling", e);
+            logger.logError("IOException happened", e);
         }
     }
 
     private void processWriting(SelectionKey key) {
-        BufferPacketContext context = (BufferPacketContext) key.attachment();
-        BufferPacket packet = context.getBufferPacket();
+        BufferPacketContext packetContext = (BufferPacketContext) key.attachment();
+        BufferPacket bufferPacket = packetContext.getBufferPacket();
         try {
-            datagramChannel.send(packet.getByteBuffer(), packet.getSocketAddress());
-            context.add(packet.getByteBuffer().clear());
+            datagramChannel.send(bufferPacket.getByteBuffer(), bufferPacket.getSocketAddress());
+            packetContext.add(bufferPacket.getByteBuffer().clear());
         } catch (IOException e) {
-            logger.logError("IO exception occurred during write handling", e);
+            logger.logError("IOException happened", e);
         }
     }
 
@@ -111,7 +110,6 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
             Utils.shutdownAndAwaitTermination(executorServiceSend);
         }
     }
-
     public static void main(String[] args) {
         Utils.serverRun(args, HelloUDPNonblockingServer.class);
     }

@@ -35,6 +35,7 @@ public class Utils {
     public static String buildRequest(String prefix, int index, int requesNum) {
         return (prefix + index + "_" + requesNum);
     }
+
     public static void processWriting(SelectionKey key, String prefix) {
         MyContext context = (MyContext) key.attachment();
         ByteBuffer buffer = context.getBuf();
@@ -49,6 +50,7 @@ public class Utils {
             logger.logError("IOException happened", e);
         }
     }
+
     public static void send(SelectionKey key, ByteBuffer buffer, DatagramChannel channel, SocketAddress hostSocketAddress) throws IOException {
         try {
             channel.send(buffer, hostSocketAddress);
@@ -58,6 +60,7 @@ public class Utils {
             logger.logError("Channel is closed", e);
         }
     }
+
     public static void runTask(ByteBuffer buf, SocketAddress dst, BufferPacketContext context) {
         buf.flip();
         String req = StandardCharsets.UTF_8.decode(buf).toString();
@@ -65,6 +68,7 @@ public class Utils {
         Utils.processBufferWrite(buf, res);
         context.addBufferPacket(buf, dst);
     }
+
     public static void processBufferWrite(ByteBuffer buf, String text) {
         buf.clear();
         buf.put(text.getBytes(StandardCharsets.UTF_8));
@@ -89,9 +93,11 @@ public class Utils {
         } else {
             try {
                 key.channel().close();
-            } catch (IOException ignored) { }
+            } catch (IOException ignored) {
+            }
         }
     }
+
     public static void processBufferRead(MyContext context, ByteBuffer buffer, DatagramChannel channel) throws IOException {
         buffer.clear();
         channel.receive(buffer);
@@ -102,7 +108,7 @@ public class Utils {
         }
     }
 
-    public static final Charset CHARSET = StandardCharsets.UTF_8;
+    public static Charset CHARSET = StandardCharsets.UTF_8;
 
     private static int testPart(String response, int start, int value) {
         int pos = Utils.dropWhile(response, start, Predicate.not(Character::isDigit));
@@ -184,15 +190,15 @@ public class Utils {
         if (args == null || args.length != 5 || Arrays.stream(args).anyMatch(Objects::isNull)) {
             throw new IllegalArgumentException("Invalid arguments");
         }
-        final int port = Integer.parseInt(args[1]);
-        final int threads = Integer.parseInt(args[3]);
-        final int requests = Integer.parseInt(args[4]);
+        int port = Integer.parseInt(args[1]);
+        int threads = Integer.parseInt(args[3]);
+        int requests = Integer.parseInt(args[4]);
         runner.run(args[0], port, args[2], threads, requests);
     }
 
-    static void serverRun(final String[] args, final Class<? extends HelloServer> clazz) {
+    static void serverRun(String[] args, Class<? extends HelloServer> clazz) {
         if (args == null || args.length != 2) {
-            logger.logError("Usage: HelloUDP[Nonblocking]Server port threads_count");
+            logger.logError("Usage: port threads_count");
             return;
         }
 
@@ -201,23 +207,23 @@ public class Utils {
             return;
         }
 
-        final int port, threads;
+        int port, threads;
         try {
             port = Integer.parseInt(args[0]);
             threads = Integer.parseInt(args[1]);
-        } catch (final NumberFormatException e) {
-            System.err.println("Failed to parse expected numeric argument: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            logger.logError("Failed to parse expected numeric argument:", e);
             return;
         }
-        try (final HelloServer server = clazz.getDeclaredConstructor().newInstance()) {
+        try (HelloServer server = clazz.getDeclaredConstructor().newInstance()) {
             server.start(port, threads);
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             logger.logError("Server has been started. Press any key to terminate");
             reader.readLine();
-        } catch (final IOException e) {
-            logger.logError("IO error occurred: " + e.getMessage());
+        } catch (IOException e) {
+            logger.logError("IO error occurred:", e);
         } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-            logger.logError("Reflection error occurred: " + e.getMessage());
+            logger.logError("Reflection error occurred:", e);
         }
     }
 }

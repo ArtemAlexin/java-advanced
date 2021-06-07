@@ -42,12 +42,6 @@ public class HelloUDPClient implements HelloClient {
         }
     }
 
-
-    /**
-     * Runs {@code HelloUDPClient}.
-     *
-     * @param args arguments.
-     */
     public static void main(final String[] args) {
         Utils.clientRun(new HelloUDPClient()::run, args);
     }

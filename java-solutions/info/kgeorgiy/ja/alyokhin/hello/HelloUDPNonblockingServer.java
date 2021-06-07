@@ -47,41 +47,41 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
             InetSocketAddress inetSocketAddress = new InetSocketAddress(port);
             datagramChannel = createBindChannel(inetSocketAddress);
             size = datagramChannel.socket().getReceiveBufferSize();
-            datagramChannel.register(selector, SelectionKey.OP_READ, new MyContext(threads));
+            datagramChannel.register(selector, SelectionKey.OP_READ, new BufferPacketContext(threads));
         } catch (IOException e) {
             logger.log("Failed to start UDP");
         }
     }
 
-    private void handleRead(final SelectionKey key) {
-        final MyContext context = (MyContext) key.attachment();
-        final ByteBuffer buffer = context.takeAndRemoveBuffer();
+    private void handleRead(SelectionKey key) {
+        BufferPacketContext context = (BufferPacketContext) key.attachment();
+        ByteBuffer buffer = context.takeAndRemoveBuffer();
 
         try {
-            final SocketAddress destination = datagramChannel.receive(buffer);
+            SocketAddress destination = datagramChannel.receive(buffer);
             executorServiceSend.submit(() -> process(buffer, destination, context));
-        } catch (final IOException e) {
+        } catch (IOException e) {
             logger.logError("IO exception occurred during read handling", e);
         }
     }
 
-    private void handleWrite(final SelectionKey key) {
-        final MyContext context = (MyContext) key.attachment();
-        final BufferPacket packet = context.getBufferPacket();
+    private void handleWrite(SelectionKey key) {
+        BufferPacketContext context = (BufferPacketContext) key.attachment();
+        BufferPacket packet = context.getBufferPacket();
         try {
             datagramChannel.send(packet.getByteBuffer(), packet.getSocketAddress());
-            context.add(packet.byteBuffer.clear());
-        } catch (final IOException e) {
+            context.add(packet.getByteBuffer().clear());
+        } catch (IOException e) {
             logger.logError("IO exception occurred during write handling", e);
         }
     }
 
-    private void process(final ByteBuffer buffer, final SocketAddress destination, final MyContext context) {
+    private void process(ByteBuffer buffer, SocketAddress destination, BufferPacketContext context) {
         buffer.flip();
-        final String request = StandardCharsets.UTF_8.decode(buffer).toString();
-        final String response = Utils.buildServerResponse(request);
+        String request = StandardCharsets.UTF_8.decode(buffer).toString();
+        String response = Utils.buildServerResponse(request);
         buffer.clear();
-        buffer.put(response.getBytes(StandardCharsets.UTF_8));
+        buffer.put(response.getBytes());
         buffer.flip();
         context.addBufferPacket(buffer, destination);
     }
@@ -102,11 +102,11 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         }
     }
 
-    class MyContext {
+    class BufferPacketContext {
         private final List<ByteBuffer> availableBuffers;
         private final List<BufferPacket> bufferPackets;
 
-        public MyContext(int threads) {
+        public BufferPacketContext(int threads) {
             availableBuffers = new ArrayList<>(threads);
             Stream.generate(() -> ByteBuffer.allocate(size))
                     .limit(threads).forEach(availableBuffers::add);
@@ -129,7 +129,7 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
             return availableBuffers.remove(availableBuffers.size() - 1);
         }
 
-        synchronized void addBufferPacket(final ByteBuffer buffer, final SocketAddress destination) {
+        synchronized void addBufferPacket(ByteBuffer buffer, SocketAddress destination) {
             if (bufferPackets.isEmpty()) {
                 datagramChannel.keyFor(selector).interestOpsOr(SelectionKey.OP_WRITE);
                 selector.wakeup();
@@ -143,24 +143,6 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
                 selector.wakeup();
             }
             return bufferPackets.remove(bufferPackets.size() - 1);
-        }
-    }
-
-    static class BufferPacket {
-        private final ByteBuffer byteBuffer;
-        private final SocketAddress socketAddress;
-
-        public ByteBuffer getByteBuffer() {
-            return byteBuffer;
-        }
-
-        public SocketAddress getSocketAddress() {
-            return socketAddress;
-        }
-
-        public BufferPacket(ByteBuffer byteBuffer, SocketAddress socketAddress) {
-            this.byteBuffer = byteBuffer;
-            this.socketAddress = socketAddress;
         }
     }
 

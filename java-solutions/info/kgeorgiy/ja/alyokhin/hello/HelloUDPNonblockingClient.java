@@ -3,6 +3,7 @@ package info.kgeorgiy.ja.alyokhin.hello;
 import info.kgeorgiy.java.advanced.hello.HelloClient;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -13,133 +14,88 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.stream.IntStream;
 
-import static info.kgeorgiy.ja.alyokhin.hello.Utils.SOCKET_TIMEOUT_MS;
+import static info.kgeorgiy.ja.alyokhin.hello.Utils.*;
 
 public class HelloUDPNonblockingClient extends AbstractUDP implements HelloClient {
     private static final Logger logger = ConsoleLogger.getInstance();
 
     @Override
-    public void run(final String host, final int port, final String prefix, final int threads, final int requests) {
-        final Selector selector;
+    public void run(String host, int port, String prefix, int threads, int requests) {
+        Selector selector;
         try {
             selector = Selector.open();
-            for (int i = 0; i < threads; i++) {
-                final DatagramChannel channel = createConnectChannel(new InetSocketAddress(InetAddress.getByName(host), port));
-                final int rxBufferSize = channel.socket().getReceiveBufferSize();
-                channel.register(selector, SelectionKey.OP_WRITE,
-                        new MyContext(i, ByteBuffer.allocate(rxBufferSize)));
-            }
-        } catch (final IOException e) {
+            IntStream.range(0, threads).forEach(x -> {
+                try {
+                    register(host, port, selector, x);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        } catch (IOException | UncheckedIOException e) {
             logger.logError("Failed to init channels", e);
             return;
         }
+        selectAction(prefix, requests, selector);
+    }
 
+    private void register(String host,
+                          int port,
+                          Selector selector,
+                          int i) throws IOException {
+        DatagramChannel channel = createConnectChannel(new InetSocketAddress(InetAddress.getByName(host), port));
+        int sz = channel.socket().getReceiveBufferSize();
+        channel.register(selector,
+                SelectionKey.OP_WRITE,
+                new MyContext(i, ByteBuffer.allocate(sz)));
+    }
+    private void selectAction(String prefix, int requests, Selector selector) {
         while (!Thread.interrupted() && !selector.keys().isEmpty()) {
-            try {
-                selector.select(SOCKET_TIMEOUT_MS);
-            } catch (final IOException e) {
-                logger.logError("Error during select");
+            if (selectBreak(selector)) {
                 break;
             }
-
-            if (selector.selectedKeys().isEmpty()) {
-                for (SelectionKey key : selector.keys()) {
-                    if (key.isWritable()) {
-                        handleWrite(key, prefix);
-                    }
-                }
+            if (findKeys(prefix, selector)) {
                 continue;
             }
-
-            for (final Iterator<SelectionKey> i = selector.selectedKeys().iterator(); i.hasNext(); ) {
-                final SelectionKey key = i.next();
-
-                if (key.isWritable()) {
-                    handleWrite(key, prefix);
-                }
-                if (key.isReadable()) {
-                    handleRead(key, requests);
-                }
-                i.remove();
-            }
+            chooseSelect(prefix, requests, selector);
         }
     }
-
-    private void handleWrite(final SelectionKey key, final String prefix) {
-        final MyContext context = (MyContext) key.attachment();
-        final ByteBuffer buffer = context.getBuffer();
-        final DatagramChannel channel = (DatagramChannel) key.channel();
-
+    private void chooseSelect(String prefix,
+                              int requests,
+                              Selector selector) {
+        for (Iterator<SelectionKey> i = selector.selectedKeys().iterator(); i.hasNext(); ) {
+            SelectionKey key = i.next();
+            if (key.isWritable()) {
+                processWriting(key, prefix);
+            }
+            if (key.isReadable()) {
+                processReading(key, requests);
+            }
+            i.remove();
+        }
+    }
+    private boolean findKeys(String text,
+                             Selector selector) {
+        if (!selector.selectedKeys().isEmpty()) {
+            return false;
+        }
+        selector.keys().forEach(key -> {
+            if (key.isWritable()) {
+                processWriting(key, text);
+            }
+        });
+        return true;
+    }
+    private boolean selectBreak(Selector selector) {
         try {
-            final SocketAddress hostSocketAddress = channel.getRemoteAddress();
-            final String request = Utils.buildRequest(prefix, context.channelId, context.requestId);
-            logger.log(String.format("Sending message: '%s'", request));
-            buffer.clear();
-            buffer.put(request.getBytes(StandardCharsets.UTF_8));
-            buffer.flip();
-
-            try {
-                channel.send(buffer, hostSocketAddress);
-                buffer.flip();
-
-                key.interestOps(SelectionKey.OP_READ);
-            } catch (final ClosedChannelException e) {
-                logger.logError("Channel is already closed", e);
-            }
-        } catch (final IOException e) {
-            logger.logError("IO exception occurred during write handling", e);
+            selector.select(SOCKET_TIMEOUT_MS);
+        } catch (IOException e) {
+            logger.logError("Error during select");
+            return true;
         }
+        return false;
     }
-
-    private void handleRead(final SelectionKey key, final int requests) {
-        final MyContext context = (MyContext) key.attachment();
-        final ByteBuffer buffer = context.getBuffer();
-        final DatagramChannel channel = (DatagramChannel) key.channel();
-
-        try {
-            buffer.clear();
-            channel.receive(buffer);
-            buffer.flip();
-            String response = StandardCharsets.UTF_8.decode(buffer).toString();
-
-            if (Utils.validate(response, context.channelId, context.requestId)) {
-                context.incrementRequestId();
-            }
-        } catch (final IOException e) {
-            logger.logError("IO exception occurred during read handling", e);
-        }
-        if (context.requestId != requests) {
-            key.interestOps(SelectionKey.OP_WRITE);
-        } else {
-            try {
-                key.channel().close();
-            } catch (final IOException e) {
-                // Ignored
-            }
-        }
-    }
-
-    private static class MyContext {
-        private final int channelId;
-        private int requestId;
-        private final ByteBuffer buffer;
-
-        MyContext(final int channelId, final ByteBuffer buffer) {
-            this.channelId = channelId;
-            this.requestId = 0;
-            this.buffer = buffer;
-        }
-
-        void incrementRequestId() {
-            this.requestId++;
-        }
-
-        ByteBuffer getBuffer() {
-            return buffer;
-        }
-    }
-
     public static void main(String[] args) {
         Utils.clientRun(new HelloUDPNonblockingClient()::run, args);
     }

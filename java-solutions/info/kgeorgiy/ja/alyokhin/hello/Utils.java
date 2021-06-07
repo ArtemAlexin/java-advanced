@@ -6,6 +6,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -29,6 +34,66 @@ public class Utils {
 
     public static String buildRequest(String prefix, int index, int requesNum) {
         return (prefix + index + "_" + requesNum);
+    }
+    public static void processWriting(SelectionKey key, String prefix) {
+        MyContext context = (MyContext) key.attachment();
+        ByteBuffer buffer = context.getBuf();
+        DatagramChannel channel = (DatagramChannel) key.channel();
+        try {
+            SocketAddress hostSocketAddress = channel.getRemoteAddress();
+            String request = Utils.buildRequest(prefix, context.getId(), context.getRequest());
+            logger.log("Sending message: " + request);
+            processBufferWrite(buffer, request);
+            send(key, buffer, channel, hostSocketAddress);
+        } catch (IOException e) {
+            logger.logError("IOException happened", e);
+        }
+    }
+    public static void send(SelectionKey key, ByteBuffer buffer, DatagramChannel channel, SocketAddress hostSocketAddress) throws IOException {
+        try {
+            channel.send(buffer, hostSocketAddress);
+            buffer.flip();
+            key.interestOps(SelectionKey.OP_READ);
+        } catch (ClosedChannelException e) {
+            logger.logError("Channel is closed", e);
+        }
+    }
+
+    public static void processBufferWrite(ByteBuffer buffer, String request) {
+        buffer.clear();
+        buffer.put(request.getBytes());
+        buffer.flip();
+    }
+
+    public static void processReading(SelectionKey key, int requests) {
+        MyContext context = (MyContext) key.attachment();
+        ByteBuffer buffer = context.getBuf();
+        DatagramChannel channel = (DatagramChannel) key.channel();
+        try {
+            processBufferRead(context, buffer, channel);
+        } catch (IOException e) {
+            logger.logError("IOException happened", e);
+        }
+        closeOrContinue(key, requests, context);
+    }
+
+    public static void closeOrContinue(SelectionKey key, int requests, MyContext context) {
+        if (context.getRequest() != requests) {
+            key.interestOps(SelectionKey.OP_WRITE);
+        } else {
+            try {
+                key.channel().close();
+            } catch (IOException ignored) { }
+        }
+    }
+    public static void processBufferRead(MyContext context, ByteBuffer buffer, DatagramChannel channel) throws IOException {
+        buffer.clear();
+        channel.receive(buffer);
+        buffer.flip();
+        String response = StandardCharsets.UTF_8.decode(buffer).toString();
+        if (Utils.validate(response, context.getId(), context.getRequest())) {
+            context.incrementRequestId();
+        }
     }
 
     public static final Charset CHARSET = StandardCharsets.UTF_8;

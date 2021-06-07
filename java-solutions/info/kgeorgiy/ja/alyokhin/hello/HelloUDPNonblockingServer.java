@@ -81,7 +81,7 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         final String request = StandardCharsets.UTF_8.decode(buffer).toString();
         final String response = Utils.buildServerResponse(request);
         buffer.clear();
-        buffer.put(response.getBytes());
+        buffer.put(response.getBytes(StandardCharsets.UTF_8));
         buffer.flip();
         context.addBufferPacket(buffer, destination);
     }

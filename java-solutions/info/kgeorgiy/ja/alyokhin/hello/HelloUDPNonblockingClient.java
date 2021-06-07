@@ -76,7 +76,7 @@ public class HelloUDPNonblockingClient extends AbstractUDP implements HelloClien
             final String request = Utils.buildRequest(prefix, context.channelId, context.requestId);
             logger.log(String.format("Sending message: '%s'", request));
             buffer.clear();
-            buffer.put(request.getBytes());
+            buffer.put(request.getBytes(StandardCharsets.UTF_8));
             buffer.flip();
 
             try {

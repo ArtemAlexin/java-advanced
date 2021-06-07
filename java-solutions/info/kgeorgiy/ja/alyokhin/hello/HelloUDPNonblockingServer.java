@@ -39,10 +39,10 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         for (Iterator<SelectionKey> iterator = select.selectedKeys().iterator(); iterator.hasNext(); ) {
             SelectionKey cur = iterator.next();
             if (cur.isReadable()) {
-                handleRead(cur);
+                processReading(cur);
             }
             if (cur.isWritable()) {
-                handleWrite(cur);
+                processWriting(cur);
             }
             iterator.remove();
         }
@@ -57,13 +57,13 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
             sz = datagramChannel.socket().getReceiveBufferSize();
             datagramChannel.register(select,
                     SelectionKey.OP_READ,
-                    new BufferPacketContext(threads));
+                    new BufferPacketContext(threads, datagramChannel, select, sz));
         } catch (IOException e) {
             logger.log("Failed to start UDP");
         }
     }
 
-    private void handleRead(SelectionKey key) {
+    private void processReading(SelectionKey key) {
         BufferPacketContext context = (BufferPacketContext) key.attachment();
         ByteBuffer buffer = context.takeAndRemoveBuffer();
         submitNewTask(context, buffer);
@@ -78,7 +78,7 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         }
     }
 
-    private void handleWrite(SelectionKey key) {
+    private void processWriting(SelectionKey key) {
         BufferPacketContext context = (BufferPacketContext) key.attachment();
         BufferPacket packet = context.getBufferPacket();
         try {
@@ -109,52 +109,6 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         } finally {
             Utils.shutdownAndAwaitTermination(executorServiceListen);
             Utils.shutdownAndAwaitTermination(executorServiceSend);
-        }
-    }
-
-    class BufferPacketContext {
-        private final List<ByteBuffer> availableBuffers;
-        private final List<BufferPacket> bufferPackets;
-
-        public BufferPacketContext(int threads) {
-            availableBuffers = new ArrayList<>(threads);
-            Stream.generate(() -> ByteBuffer.allocate(sz))
-                    .limit(threads).forEach(availableBuffers::add);
-            bufferPackets = new ArrayList<>();
-        }
-
-        public synchronized void add(ByteBuffer buffer) {
-            if (availableBuffers.isEmpty()) {
-                datagramChannel.keyFor(select).interestOpsOr(SelectionKey.OP_READ);
-                select.wakeup();
-            }
-            availableBuffers.add(buffer);
-        }
-
-        public synchronized ByteBuffer takeAndRemoveBuffer() {
-            ByteBuffer byteBuffer = availableBuffers.remove(availableBuffers.size() - 1);
-            if (availableBuffers.isEmpty()) {
-                datagramChannel.keyFor(select).interestOpsAnd(~SelectionKey.OP_READ);
-                select.wakeup();
-            }
-            return byteBuffer;
-        }
-
-        synchronized void addBufferPacket(ByteBuffer buffer, SocketAddress destination) {
-            if (bufferPackets.isEmpty()) {
-                datagramChannel.keyFor(select).interestOpsOr(SelectionKey.OP_WRITE);
-                select.wakeup();
-            }
-            bufferPackets.add(new BufferPacket(buffer, destination));
-        }
-
-        synchronized BufferPacket getBufferPacket() {
-            BufferPacket t = bufferPackets.remove(bufferPackets.size() - 1);
-            if(bufferPackets.isEmpty()) {
-                datagramChannel.keyFor(select).interestOpsAnd(~SelectionKey.OP_WRITE);
-                select.wakeup();
-            }
-            return t;
         }
     }
 

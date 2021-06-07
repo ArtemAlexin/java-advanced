@@ -58,7 +58,7 @@ public class Utils {
             logger.logError("Channel is closed", e);
         }
     }
-    public static void runTask(ByteBuffer buf, SocketAddress dst, HelloUDPNonblockingServer.BufferPacketContext context) {
+    public static void runTask(ByteBuffer buf, SocketAddress dst, BufferPacketContext context) {
         buf.flip();
         String req = StandardCharsets.UTF_8.decode(buf).toString();
         String res = Utils.buildServerResponse(req);

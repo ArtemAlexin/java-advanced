@@ -1,12 +1,8 @@
 package info.kgeorgiy.ja.alyokhin.hello;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
 
@@ -20,12 +16,12 @@ public class HelloUDPServer extends AbstractUPDServer {
     void startSocket(int port, int threads) {
         try {
             datagramSocket = new DatagramSocket(port);
-            size = datagramSocket.getReceiveBufferSize();
+            sz = datagramSocket.getReceiveBufferSize();
         } catch (SocketException e) {
             logger.logError("Failed to start HelloUDPServer", e);
         }
         waitingTasks = new ArrayBlockingQueue<>(threads);
-        Stream.generate(() -> new PacketStringImpl(size)).limit(threads).forEach(waitingTasks::add);
+        Stream.generate(() -> new PacketStringImpl(sz)).limit(threads).forEach(waitingTasks::add);
     }
 
     @Override

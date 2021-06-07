@@ -1,5 +1,6 @@
 package info.kgeorgiy.ja.alyokhin.hello;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -8,46 +9,55 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class HelloUDPNonblockingServer extends AbstractUPDServer {
-    private Selector selector;
-    private DatagramChannel datagramChannel;
     private static final Logger logger = ConsoleLogger.getInstance();
+
+    private Selector select;
+    private DatagramChannel datagramChannel;
 
     @Override
     void listen() {
-        while (!selector.keys().isEmpty() && !Thread.interrupted()) {
+        makeListening();
+    }
+
+    private void makeListening() {
+        while (!select.keys().isEmpty() && !Thread.interrupted()) {
             try {
-                selector.select();
+                select.select();
             } catch (IOException e) {
-                logger.log("Selection socket failed");
+                logger.log("Socket Select failed");
                 break;
             }
-            for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); ) {
-                SelectionKey next = iterator.next();
-                if (next.isWritable()) {
-                    handleWrite(next);
-                }
-                if (next.isReadable()) {
-                    handleRead(next);
-                }
-                iterator.remove();
+            iterateSelect();
+        }
+    }
+
+    private void iterateSelect() {
+        for (Iterator<SelectionKey> iterator = select.selectedKeys().iterator(); iterator.hasNext(); ) {
+            SelectionKey cur = iterator.next();
+            if (cur.isReadable()) {
+                handleRead(cur);
             }
+            if (cur.isWritable()) {
+                handleWrite(cur);
+            }
+            iterator.remove();
         }
     }
 
     @Override
     void startSocket(int port, int threads) {
         try {
-            selector = Selector.open();
+            select = Selector.open();
             InetSocketAddress inetSocketAddress = new InetSocketAddress(port);
             datagramChannel = createBindChannel(inetSocketAddress);
-            size = datagramChannel.socket().getReceiveBufferSize();
-            datagramChannel.register(selector, SelectionKey.OP_READ, new BufferPacketContext(threads));
+            sz = datagramChannel.socket().getReceiveBufferSize();
+            datagramChannel.register(select,
+                    SelectionKey.OP_READ,
+                    new BufferPacketContext(threads));
         } catch (IOException e) {
             logger.log("Failed to start UDP");
         }
@@ -56,10 +66,13 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
     private void handleRead(SelectionKey key) {
         BufferPacketContext context = (BufferPacketContext) key.attachment();
         ByteBuffer buffer = context.takeAndRemoveBuffer();
+        submitNewTask(context, buffer);
+    }
 
+    private void submitNewTask(BufferPacketContext context, ByteBuffer buffer) {
         try {
             SocketAddress destination = datagramChannel.receive(buffer);
-            executorServiceSend.submit(() -> process(buffer, destination, context));
+            executorServiceSend.submit(() -> runTask(buffer, destination, context));
         } catch (IOException e) {
             logger.logError("IO exception occurred during read handling", e);
         }
@@ -76,27 +89,24 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
         }
     }
 
-    private void process(ByteBuffer buffer, SocketAddress destination, BufferPacketContext context) {
-        buffer.flip();
-        String request = StandardCharsets.UTF_8.decode(buffer).toString();
-        String response = Utils.buildServerResponse(request);
-        buffer.clear();
-        buffer.put(response.getBytes());
-        buffer.flip();
-        context.addBufferPacket(buffer, destination);
+    private void runTask(ByteBuffer buf, SocketAddress dst, BufferPacketContext context) {
+        buf.flip();
+        String req = StandardCharsets.UTF_8.decode(buf).toString();
+        String res = Utils.buildServerResponse(req);
+        Utils.processBufferWrite(buf, res);
+        context.addBufferPacket(buf, dst);
     }
 
     @Override
     public void close() {
+        Closeable[] objects = new Closeable[]{datagramChannel, select};
         try {
-            if (datagramChannel != null) {
-                datagramChannel.close();
-            }
-            if (selector != null) {
-                selector.close();
-            }
-        } catch (IOException ignored) {
-        } finally {
+            Arrays.stream(objects).filter(Objects::nonNull).forEach(x -> {
+                try {
+                    x.close();
+                } catch (IOException ignored) { }
+            });
+        }finally {
             Utils.shutdownAndAwaitTermination(executorServiceListen);
             Utils.shutdownAndAwaitTermination(executorServiceSend);
         }
@@ -108,39 +118,39 @@ public class HelloUDPNonblockingServer extends AbstractUPDServer {
 
         public BufferPacketContext(int threads) {
             availableBuffers = new ArrayList<>(threads);
-            Stream.generate(() -> ByteBuffer.allocate(size))
+            Stream.generate(() -> ByteBuffer.allocate(sz))
                     .limit(threads).forEach(availableBuffers::add);
             bufferPackets = new ArrayList<>();
         }
 
         public synchronized void add(ByteBuffer buffer) {
             if (availableBuffers.isEmpty()) {
-                datagramChannel.keyFor(selector).interestOpsOr(SelectionKey.OP_READ);
-                selector.wakeup();
+                datagramChannel.keyFor(select).interestOpsOr(SelectionKey.OP_READ);
+                select.wakeup();
             }
             availableBuffers.add(buffer);
         }
 
         public synchronized ByteBuffer takeAndRemoveBuffer() {
             if (availableBuffers.size() == 1) {
-                datagramChannel.keyFor(selector).interestOpsAnd(~SelectionKey.OP_READ);
-                selector.wakeup();
+                datagramChannel.keyFor(select).interestOpsAnd(~SelectionKey.OP_READ);
+                select.wakeup();
             }
             return availableBuffers.remove(availableBuffers.size() - 1);
         }
 
         synchronized void addBufferPacket(ByteBuffer buffer, SocketAddress destination) {
             if (bufferPackets.isEmpty()) {
-                datagramChannel.keyFor(selector).interestOpsOr(SelectionKey.OP_WRITE);
-                selector.wakeup();
+                datagramChannel.keyFor(select).interestOpsOr(SelectionKey.OP_WRITE);
+                select.wakeup();
             }
             bufferPackets.add(new BufferPacket(buffer, destination));
         }
 
         synchronized BufferPacket getBufferPacket() {
             if (bufferPackets.size() == 1) {
-                datagramChannel.keyFor(selector).interestOpsAnd(~SelectionKey.OP_WRITE);
-                selector.wakeup();
+                datagramChannel.keyFor(select).interestOpsAnd(~SelectionKey.OP_WRITE);
+                select.wakeup();
             }
             return bufferPackets.remove(bufferPackets.size() - 1);
         }

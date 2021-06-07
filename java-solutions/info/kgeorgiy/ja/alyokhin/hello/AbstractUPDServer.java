@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 public abstract class AbstractUPDServer extends AbstractUDP implements HelloServer {
     protected ExecutorService executorServiceListen;
     protected ExecutorService executorServiceSend;
-    protected int size;
+    protected int sz;
 
     abstract void listen();
 

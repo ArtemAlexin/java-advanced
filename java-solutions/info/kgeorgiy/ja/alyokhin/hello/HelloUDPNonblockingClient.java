@@ -44,9 +44,9 @@ public class HelloUDPNonblockingClient extends AbstractUDP implements HelloClien
                           int port,
                           Selector selector,
                           int i) throws IOException {
-        DatagramChannel channel = createConnectChannel(new InetSocketAddress(InetAddress.getByName(host), port));
-        int sz = channel.socket().getReceiveBufferSize();
-        channel.register(selector,
+        DatagramChannel datagramChannel = createConnectChannel(new InetSocketAddress(InetAddress.getByName(host), port));
+        int sz = datagramChannel.socket().getReceiveBufferSize();
+        datagramChannel.register(selector,
                 SelectionKey.OP_WRITE,
                 new MyContext(i, ByteBuffer.allocate(sz)));
     }

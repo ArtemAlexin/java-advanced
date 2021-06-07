@@ -58,11 +58,17 @@ public class Utils {
             logger.logError("Channel is closed", e);
         }
     }
-
-    public static void processBufferWrite(ByteBuffer buffer, String request) {
-        buffer.clear();
-        buffer.put(request.getBytes());
-        buffer.flip();
+    public static void runTask(ByteBuffer buf, SocketAddress dst, HelloUDPNonblockingServer.BufferPacketContext context) {
+        buf.flip();
+        String req = StandardCharsets.UTF_8.decode(buf).toString();
+        String res = Utils.buildServerResponse(req);
+        Utils.processBufferWrite(buf, res);
+        context.addBufferPacket(buf, dst);
+    }
+    public static void processBufferWrite(ByteBuffer buf, String text) {
+        buf.clear();
+        buf.put(text.getBytes(StandardCharsets.UTF_8));
+        buf.flip();
     }
 
     public static void processReading(SelectionKey key, int requests) {
